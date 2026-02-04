@@ -1,11 +1,11 @@
 /**
- * Test counter-store using @effect-rx
+ * Test counter-store using @effect-atom
  */
 
-import { Rx } from '$lib/effect-rx'
+import { Atom } from '$lib/effect-atom'
 
 // Simple writable counter
-export const counterRx = Rx.make(0)
+export const counterAtom = Atom.make(0)
 
-// Derived Rx that doubles the counter
-export const doubledRx = Rx.readable((get) => get(counterRx) * 2)
+// Derived atom that doubles the counter
+export const doubledAtom = Atom.readable((get) => get(counterAtom) * 2)

@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { rxBind, rxValue } from '$lib/effect-rx'
-  import { counterRx, doubledRx } from '$lib/stores/counter'
+  import { useAtom, useAtomValue } from '$lib/effect-atom'
+  import { counterAtom, doubledAtom } from '$lib/stores/counter'
 
-  const counter = rxBind(counterRx)
-  const doubled = rxValue(doubledRx)
+  const counter = useAtom(counterAtom)
+  const doubled = useAtomValue(doubledAtom)
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center gap-8 bg-slate-50 p-8">
-  <h1 class="text-2xl font-bold text-gray-900">@effect-rx Svelte Adapter Test</h1>
+  <h1 class="text-2xl font-bold text-gray-900">@effect-atom Svelte Adapter Test</h1>
 
   <div class="rounded-xl border border-gray-200 bg-white p-8 shadow-lg">
     <div class="mb-6 text-center">
@@ -16,7 +16,7 @@
     </div>
 
     <div class="mb-6 text-center">
-      <p class="text-sm text-gray-500">Doubled (derived Rx)</p>
+      <p class="text-sm text-gray-500">Doubled (derived atom)</p>
       <p class="text-3xl font-semibold text-fuchsia-600">{doubled()}</p>
     </div>
 

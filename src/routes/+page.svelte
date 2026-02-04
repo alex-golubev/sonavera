@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { resolve } from '$app/paths'
+
   let scrolled = $state(false)
 
   $effect(() => {
@@ -43,26 +45,35 @@
       </div>
 
       <div class="hidden items-center gap-8 md:flex">
-        <a href="/" class="text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600">
+        <a
+          href={resolve('/')}
+          class="text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600"
+        >
           Features
         </a>
-        <a href="/" class="text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600">
+        <a
+          href={resolve('/')}
+          class="text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600"
+        >
           How it works
         </a>
-        <a href="/" class="text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600">
+        <a
+          href={resolve('/')}
+          class="text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600"
+        >
           Pricing
         </a>
       </div>
 
       <div class="flex items-center gap-4">
         <a
-          href="/login"
+          href={resolve('/')}
           class="hidden text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600 sm:block"
         >
           Log in
         </a>
         <a
-          href="/signup"
+          href={resolve('/')}
           class="rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-fuchsia-500/25"
         >
           Start free
@@ -108,7 +119,7 @@
       <!-- CTA Buttons -->
       <div class="mb-16 flex flex-col items-center justify-center gap-4 sm:flex-row">
         <a
-          href="/signup"
+          href={resolve('/')}
           class="group flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-fuchsia-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-fuchsia-500/30 sm:w-auto"
         >
           Start talking
@@ -123,7 +134,7 @@
           </svg>
         </a>
         <a
-          href="/"
+          href={resolve('/')}
           class="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-8 py-4 text-base font-semibold text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 sm:w-auto"
         >
           <svg class="h-5 w-5 text-fuchsia-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -213,7 +224,7 @@
                       />
                     </svg>
                     <div class="flex items-center gap-0.5">
-                      {#each aiWaveHeights as h}
+                      {#each aiWaveHeights as h, i (i)}
                         <div class="w-0.5 rounded-full bg-gray-300" style="height: {h * 2}px"></div>
                       {/each}
                     </div>
@@ -237,7 +248,7 @@
                       />
                     </svg>
                     <div class="flex items-center gap-0.5">
-                      {#each userWaveHeights as h}
+                      {#each userWaveHeights as h, i (i)}
                         <div class="w-0.5 rounded-full bg-white/50" style="height: {h * 2}px"></div>
                       {/each}
                     </div>
@@ -281,7 +292,7 @@
                       />
                     </svg>
                     <div class="flex items-center gap-0.5">
-                      {#each aiFeedbackWaveHeights as h}
+                      {#each aiFeedbackWaveHeights as h, i (i)}
                         <div class="w-0.5 rounded-full bg-gray-300" style="height: {h * 2}px"></div>
                       {/each}
                     </div>
@@ -424,7 +435,7 @@
       <!-- Social proof -->
       <div class="mt-16 flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:gap-12">
         <div class="flex -space-x-2">
-          {#each avatarGradients as gradient, i}
+          {#each avatarGradients as gradient, i (i)}
             <div
               class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-linear-to-br {gradient} text-xs font-medium text-white"
             >
@@ -434,7 +445,7 @@
         </div>
         <div class="text-center sm:text-left">
           <div class="flex items-center justify-center gap-1 sm:justify-start">
-            {#each [1, 2, 3, 4, 5] as _}
+            {#each [1, 2, 3, 4, 5] as star (star)}
               <svg class="h-5 w-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
