@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte'
   import { untrack } from 'svelte'
   import * as Registry from '@effect-atom/atom/Registry'
-  import { setRegistry } from './context.js'
+  import { setRegistry } from './context'
 
   interface Props {
     registry?: Registry.Registry

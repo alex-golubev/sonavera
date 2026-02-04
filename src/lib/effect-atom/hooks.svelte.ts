@@ -9,8 +9,8 @@ import type * as Result from '@effect-atom/atom/Result'
 import * as Cause from 'effect/Cause'
 import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
-import { getRegistry } from './context.js'
-import { fromSubscribable } from './subscribe.svelte.js'
+import { getRegistry } from './context'
+import { fromSubscribable } from './subscribe.svelte'
 
 const subscribeToAtom = <A>(atom: Atom.Atom<A>): (() => A) => {
   const registry = getRegistry()

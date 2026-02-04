@@ -35,17 +35,17 @@
  */
 
 // Context
-export { setRegistry, getRegistry, tryGetRegistry, RegistryNotFoundError } from './context.js'
+export { setRegistry, getRegistry, tryGetRegistry, RegistryNotFoundError } from './context'
 export { default as RegistryProvider } from './RegistryProvider.svelte'
 
 // Core hooks
-export { useAtomValue, useAtomSet, useAtom, useAtomMount, useAtomRefresh } from './hooks.svelte.js'
+export { useAtomValue, useAtomSet, useAtom, useAtomMount, useAtomRefresh } from './hooks.svelte'
 
 // Result handling
-export { useAtomResult, useAtomResultValue, type AtomResultState } from './result.svelte.js'
+export { useAtomResult, useAtomResultValue, type AtomResultState } from './result.svelte'
 
 // AtomRef hooks
-export { useAtomRef, useAtomRefProp } from './ref.svelte.js'
+export { useAtomRef, useAtomRefProp } from './ref.svelte'
 
 // Re-export core @effect-atom modules
 export * as Atom from '@effect-atom/atom/Atom'
@@ -56,4 +56,4 @@ export * as AtomRpc from '@effect-atom/atom/AtomRpc'
 export * as AtomHttpApi from '@effect-atom/atom/AtomHttpApi'
 
 // Type helpers
-export type { AtomTypeValue, AtomWriteValue, AtomReadValue } from './types.js'
+export type { AtomTypeValue, AtomWriteValue, AtomReadValue } from './types'

@@ -6,7 +6,7 @@
 import type { Atom } from '@effect-atom/atom/Atom'
 import * as Result from '@effect-atom/atom/Result'
 import { Option, pipe } from 'effect'
-import { useAtomValue } from './hooks.svelte.js'
+import { useAtomValue } from './hooks.svelte'
 
 export interface AtomResultState<A, E> {
   readonly isInitial: () => boolean
