@@ -6,7 +6,7 @@
 import type { Atom } from '@effect-atom/atom/Atom'
 import * as Result from '@effect-atom/atom/Result'
 import { Option, pipe } from 'effect'
-import { useAtomValue } from './hooks.svelte'
+import { subscribeToAtom } from './hooks.svelte'
 
 export interface AtomResultState<A, E> {
   readonly isInitial: () => boolean
@@ -21,7 +21,7 @@ export interface AtomResultState<A, E> {
 }
 
 export const useAtomResult = <A, E>(atom: Atom<Result.Result<A, E>>): AtomResultState<A, E> => {
-  const result = useAtomValue(atom)
+  const result = subscribeToAtom(atom, () => Result.initial() as Result.Result<A, E>)
 
   return {
     isInitial: () => Result.isInitial(result()),
@@ -43,8 +43,7 @@ export const useAtomResult = <A, E>(atom: Atom<Result.Result<A, E>>): AtomResult
   }
 }
 
-export const useAtomResultValue = <A, E>(atom: Atom<Result.Result<A, E>>, fallback: A): (() => A) =>
-  useAtomValue(
-    atom,
-    Result.getOrElse(() => fallback)
-  )
+export const useAtomResultValue = <A, E>(atom: Atom<Result.Result<A, E>>, fallback: A): (() => A) => {
+  const result = subscribeToAtom(atom, () => Result.initial() as Result.Result<A, E>)
+  return () => pipe(result(), Result.getOrElse(() => fallback))
+}

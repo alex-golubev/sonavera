@@ -456,6 +456,40 @@ Make sure `RegistryProvider` wraps your component tree in `+layout.svelte`.
 2. Verify the atom is mounted if it performs async work
 3. Check browser devtools for errors
 
-### SSR issues
+### SSR and async atoms
 
-The adapter is SSR-safe. Registry is created per-request on the server via Svelte context.
+Synchronous atoms (`Atom.make`, `Atom.readable`) work during SSR with no extra setup — `registry.get()` returns the initial value without side effects.
+
+Async atoms (RPC queries, HTTP fetches) are SSR-safe via the `ssrInitial` mechanism. During SSR, `registry.get(atom)` would eagerly trigger `fetch()`, which fails on the server (relative URLs have no origin in Node.js) and violates SvelteKit's rule: _"Avoid calling fetch eagerly during server-side rendering — put your fetch calls inside onMount or a load function instead."_
+
+**How it works:** `fromSubscribable` accepts an optional `ssrInitial` parameter. When provided and running on the server, it is used instead of the eager `get()` call. The real `get()` + `subscribe()` only execute inside `$effect` (client-only):
+
+```typescript
+// subscribe.svelte.ts
+fromSubscribable(get, subscribe, ssrInitial?)
+//   SSR:     $state(ssrInitial())  — no side effects
+//   Browser: $state(get())         — normal evaluation
+//   $effect: get() + subscribe()   — always client-only
+```
+
+`useAtomResult` and `useAtomResultValue` pass `() => Result.initial()` as `ssrInitial` automatically, so all Result atoms are SSR-safe by default. No `ssr = false` or `{#if browser}` guards needed.
+
+**Template pattern** — use `{:else}` to cover both Initial (SSR) and Loading states, preventing layout shift:
+
+```svelte
+{#if data.isSuccess()}
+  <Content value={data.value()} />
+{:else if data.isFailure()}
+  <ErrorMessage error={data.error()} />
+{:else}
+  <LoadingSpinner />
+{/if}
+```
+
+For custom atoms with side effects that don't use `useAtomResult`, pass `ssrInitial` manually via `subscribeToAtom`:
+
+```typescript
+import { subscribeToAtom } from '$lib/effect-atom/hooks.svelte'
+
+const value = subscribeToAtom(myAtom, () => defaultValue)
+```

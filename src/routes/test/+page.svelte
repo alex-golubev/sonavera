@@ -43,12 +43,12 @@
   <!-- RPC Ping -->
   <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
     <h2 class="mb-4 text-lg font-semibold text-gray-700">RPC Ping</h2>
-    {#if ping.isLoading() && !ping.isSuccess()}
-      <p class="text-gray-500">Pinging...</p>
-    {:else if ping.isSuccess()}
+    {#if ping.isSuccess()}
       <p class="text-green-600">ok: {ping.value()?.ok}</p>
     {:else if ping.isFailure()}
       <p class="text-red-600">Error: {ping.error()}</p>
+    {:else}
+      <p class="text-gray-500">Pinging...</p>
     {/if}
   </section>
 </div>

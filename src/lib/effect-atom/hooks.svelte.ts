@@ -12,11 +12,12 @@ import * as Exit from 'effect/Exit'
 import { getRegistry } from './context'
 import { fromSubscribable } from './subscribe.svelte'
 
-const subscribeToAtom = <A>(atom: Atom.Atom<A>): (() => A) => {
+export const subscribeToAtom = <A>(atom: Atom.Atom<A>, ssrInitial?: () => A): (() => A) => {
   const registry = getRegistry()
   return fromSubscribable(
     () => registry.get(atom),
-    (cb) => registry.subscribe(atom, cb)
+    (cb) => registry.subscribe(atom, cb),
+    ssrInitial
   )
 }
 
