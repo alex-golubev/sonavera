@@ -19,6 +19,7 @@
   const handleSend = () => {
     const trimmed = input.trim()
     input = ''
+    Effect.runSync(tts.warmup(registry))
     Effect.runSync(llm.send(registry, trimmed))
   }
 

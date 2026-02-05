@@ -26,7 +26,7 @@ export const OpenAiTtsLive = Layer.effect(
                 voice: voice as 'coral',
                 input: text,
                 instructions: VOICE_INSTRUCTIONS,
-                response_format: 'mp3'
+                response_format: 'pcm'
               })
               const body = response.body
               return body
