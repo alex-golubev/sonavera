@@ -47,7 +47,11 @@ vi.mock('@ricky0123/vad-web', () => ({
 vi.mock('$lib/rpc/client', () => ({
   AppClient: {
     query: vi.fn(() => {
-      transcribeAtom = Atom.make(Result.initial(true)) as typeof transcribeAtom
+      const inner = Atom.make(Result.initial(true))
+      transcribeAtom = Atom.writable(
+        (get) => get(inner),
+        (ctx, value) => ctx.set(inner, value === undefined ? Result.initial(true) : value)
+      ) as typeof transcribeAtom
       return transcribeAtom
     })
   }
@@ -202,6 +206,23 @@ describe('stt store', () => {
       registry.set(transcribeAtom, Result.success({ done: true, items: [{ text: 'Hello world' }] }))
 
       expect(registry.get(stt.text)).toBe('Hello world')
+      expect(registry.get(stt.transcribing)).toBe(false)
+    })
+
+    it('accumulates text across multiple chunks', () => {
+      registry.set(transcribeAtom, Result.success({ done: false, items: [{ text: 'Hello' }] }))
+      expect(registry.get(stt.text)).toBe('Hello')
+      expect(registry.get(stt.transcribing)).toBe(true)
+
+      registry.set(transcribeAtom, Result.success({ done: false, items: [{ text: 'Hello' }, { text: ' world' }] }))
+      expect(registry.get(stt.text)).toBe('Hello world')
+      expect(registry.get(stt.transcribing)).toBe(true)
+
+      registry.set(
+        transcribeAtom,
+        Result.success({ done: true, items: [{ text: 'Hello' }, { text: ' world' }, { text: '!' }] })
+      )
+      expect(registry.get(stt.text)).toBe('Hello world!')
       expect(registry.get(stt.transcribing)).toBe(false)
     })
   })

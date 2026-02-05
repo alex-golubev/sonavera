@@ -17,21 +17,21 @@ export const initializing = Atom.make(false)
 
 const transcribeQuery = (audio: Uint8Array, language: string) => AppClient.query('Transcribe', { audio, language })
 
-let vad: MicVAD | undefined
-let disposeStream: (() => void) | undefined
+const vadRef = Atom.make<MicVAD | undefined>(undefined)
+const disposeStreamRef = Atom.make<(() => void) | undefined>(undefined)
 
-const resetStream = () => {
-  disposeStream?.()
-  disposeStream = undefined
+const resetStream = (registry: Registry.Registry) => {
+  registry.get(disposeStreamRef)?.()
+  registry.set(disposeStreamRef, undefined)
 }
 
 const finishStream = (registry: Registry.Registry) => {
   registry.set(transcribing, false)
-  resetStream()
+  resetStream(registry)
 }
 
 const consumeTranscription = (registry: Registry.Registry, audio: Uint8Array, language: string) => {
-  resetStream()
+  resetStream(registry)
   registry.set(text, '')
   registry.set(transcribing, true)
   registry.set(error, '')
@@ -58,22 +58,22 @@ const consumeTranscription = (registry: Registry.Registry, audio: Uint8Array, la
           )
           registry.set(text, '')
           registry.set(transcribing, false)
-          resetStream()
+          resetStream(registry)
         },
         onDefect: () => {
           registry.set(error, 'Unknown error')
           registry.set(text, '')
           registry.set(transcribing, false)
-          resetStream()
+          resetStream(registry)
         }
       })
     )
   )
 
-  disposeStream = () => {
+  registry.set(disposeStreamRef, () => {
     unsubscribe()
     unmount()
-  }
+  })
 }
 
 // --- VAD operations ---
@@ -100,7 +100,7 @@ const toggleVad = (registry: Registry.Registry, mic: MicVAD) =>
 
 const createVad = (registry: Registry.Registry, language: string) =>
   Effect.suspend(() =>
-    vad || registry.get(initializing)
+    registry.get(vadRef) || registry.get(initializing)
       ? Effect.void
       : Effect.gen(function* () {
           registry.set(initializing, true)
@@ -120,7 +120,7 @@ const createVad = (registry: Registry.Registry, language: string) =>
             catch: String
           })
 
-          vad = mic
+          registry.set(vadRef, mic)
           registry.set(ready, true)
 
           yield* Effect.tryPromise({ try: () => mic.start(), catch: String })
@@ -136,18 +136,23 @@ const createVad = (registry: Registry.Registry, language: string) =>
 
 export const toggle = (registry: Registry.Registry, language: string) =>
   pipe(
-    Effect.suspend(() => (vad ? toggleVad(registry, vad) : createVad(registry, language))),
+    Effect.suspend(() => {
+      const mic = registry.get(vadRef)
+      return mic ? toggleVad(registry, mic) : createVad(registry, language)
+    }),
     Effect.tapError((err) => Effect.sync(() => registry.set(error, String(err)))),
     Effect.ignore
   )
 
 export const destroy = (registry: Registry.Registry) =>
   Effect.sync(() => {
-    resetStream()
-    vad?.destroy()
-    vad = undefined
+    resetStream(registry)
+    registry.get(vadRef)?.destroy()
+    registry.set(vadRef, undefined)
     registry.set(listening, false)
     registry.set(speaking, false)
     registry.set(transcribing, false)
+    registry.set(text, '')
+    registry.set(error, '')
     registry.set(ready, false)
   })

@@ -2,11 +2,10 @@ import { Context, Effect, Layer, Stream } from 'effect'
 import OpenAI from 'openai'
 import { TranscribeError } from '../schema'
 
-export interface OpenAiStt {
-  readonly transcribeStream: (audio: Uint8Array, language: string) => Stream.Stream<string, TranscribeError>
-}
-
-export const OpenAiStt = Context.GenericTag<OpenAiStt>('OpenAiStt')
+export class OpenAiStt extends Context.Tag('OpenAiStt')<
+  OpenAiStt,
+  { readonly transcribeStream: (audio: Uint8Array, language: string) => Stream.Stream<string, TranscribeError> }
+>() {}
 
 export const OpenAiSttLive = Layer.effect(
   OpenAiStt,
