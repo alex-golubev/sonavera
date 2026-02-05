@@ -1,7 +1,9 @@
 <script lang="ts">
   import { useAtomValue, getRegistry } from '$lib/effect-atom'
-  import { Effect } from 'effect'
+  import { Effect, Option, pipe } from 'effect'
   import * as llm from '../store'
+  import * as tts from '$lib/features/tts/store'
+  import TtsToggle from '$lib/features/tts/components/TtsToggle.svelte'
 
   const registry = getRegistry()
 
@@ -9,8 +11,10 @@
   const responding = useAtomValue(llm.responding)
   const streamingText = useAtomValue(llm.streamingText)
   const error = useAtomValue(llm.error)
+  const ttsError = useAtomValue(tts.error)
 
   let input = $state('')
+  let wasResponding = $state(false)
 
   const handleSend = () => {
     const trimmed = input.trim()
@@ -26,7 +30,30 @@
         })()
       : undefined
 
-  $effect(() => () => Effect.runSync(llm.reset(registry)))
+  $effect(() => {
+    const now = responding()
+    const justFinished = wasResponding && !now
+    wasResponding = now
+    pipe(
+      justFinished ? Option.some(undefined) : Option.none(),
+      Option.flatMap(() =>
+        pipe(
+          messages().at(-1),
+          Option.fromNullable,
+          Option.filter((msg) => msg.role === 'assistant')
+        )
+      ),
+      Option.match({
+        onNone: () => {},
+        onSome: (msg) => Effect.runSync(tts.speak(registry, msg.content, 'coral'))
+      })
+    )
+  })
+
+  $effect(() => () => {
+    Effect.runSync(llm.reset(registry))
+    Effect.runSync(tts.destroy(registry))
+  })
 </script>
 
 <div class="flex h-125 flex-col rounded-xl border border-gray-200 bg-white">
@@ -56,6 +83,12 @@
         <p class="text-sm text-red-700">{error()}</p>
       </div>
     {/if}
+
+    {#if ttsError()}
+      <div class="rounded-xl bg-red-50 px-4 py-3">
+        <p class="text-sm text-red-700">{ttsError()}</p>
+      </div>
+    {/if}
   </div>
 
   <div class="border-t border-gray-200 p-3">
@@ -68,6 +101,7 @@
         placeholder="Type a message..."
         class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
       />
+      <TtsToggle />
       <button
         type="button"
         onclick={handleSend}
