@@ -17,8 +17,8 @@ export const initializing = Atom.make(false)
 
 const transcribeQuery = (audio: Uint8Array, language: string) => AppClient.query('Transcribe', { audio, language })
 
-const vadRef = Atom.make<MicVAD | undefined>(undefined)
-const disposeStreamRef = Atom.make<(() => void) | undefined>(undefined)
+const vadRef = Atom.keepAlive(Atom.make<MicVAD | undefined>(undefined))
+const disposeStreamRef = Atom.keepAlive(Atom.make<(() => void) | undefined>(undefined))
 
 const resetStream = (registry: Registry.Registry) => {
   registry.get(disposeStreamRef)?.()
