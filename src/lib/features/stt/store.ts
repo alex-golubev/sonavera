@@ -52,15 +52,17 @@ const consumeTranscription = (registry: Registry.Registry, audio: Uint8Array, la
         },
         onError: (err) => {
           pipe(
-            Match.value(err as { readonly _tag: string }),
-            Match.not({ _tag: 'NoSuchElementException' }, (e) => registry.set(error, String(e))),
-            Match.orElse(() => {})
+            Match.value(err),
+            Match.tag('NoSuchElementException', () => {}),
+            Match.orElse((e) => registry.set(error, String(e)))
           )
+          registry.set(text, '')
           registry.set(transcribing, false)
           resetStream()
         },
         onDefect: () => {
           registry.set(error, 'Unknown error')
+          registry.set(text, '')
           registry.set(transcribing, false)
           resetStream()
         }
