@@ -1,4 +1,4 @@
-import { Rpc, RpcGroup } from '@effect/rpc'
-import { Ping } from './schema'
+import { RpcGroup } from '@effect/rpc'
+import { SttRpc } from '$lib/features/stt/rpc'
 
-export class AppRpc extends RpcGroup.make(Rpc.make('Ping', { success: Ping })) {}
+export class RootRpc extends RpcGroup.make().merge(SttRpc) {}

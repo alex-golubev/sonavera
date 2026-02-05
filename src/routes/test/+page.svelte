@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { useAtom, useAtomValue, useAtomResult } from '$lib/effect-atom'
+  import { useAtom, useAtomValue } from '$lib/effect-atom'
+  import VoiceRecorder from '$lib/features/stt/components/VoiceRecorder.svelte'
   import { counterAtom, doubledAtom } from '$lib/stores/counter'
-  import { pingAtom } from '$lib/stores/languages'
 
   const counter = useAtom(counterAtom)
   const doubled = useAtomValue(doubledAtom)
-  const ping = useAtomResult(pingAtom)
 </script>
 
 <div class="mx-auto min-h-screen max-w-4xl space-y-10 bg-slate-50 p-8">
@@ -40,15 +39,9 @@
     </div>
   </section>
 
-  <!-- RPC Ping -->
+  <!-- Voice Recorder (STT) -->
   <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
-    <h2 class="mb-4 text-lg font-semibold text-gray-700">RPC Ping</h2>
-    {#if ping.isSuccess()}
-      <p class="text-green-600">ok: {ping.value()?.ok}</p>
-    {:else if ping.isFailure()}
-      <p class="text-red-600">Error: {ping.error()}</p>
-    {:else}
-      <p class="text-gray-500">Pinging...</p>
-    {/if}
+    <h2 class="mb-4 text-lg font-semibold text-gray-700">Voice Recorder</h2>
+    <VoiceRecorder />
   </section>
 </div>

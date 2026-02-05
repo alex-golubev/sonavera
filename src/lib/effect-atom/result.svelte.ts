@@ -45,5 +45,9 @@ export const useAtomResult = <A, E>(atom: Atom<Result.Result<A, E>>): AtomResult
 
 export const useAtomResultValue = <A, E>(atom: Atom<Result.Result<A, E>>, fallback: A): (() => A) => {
   const result = subscribeToAtom(atom, () => Result.initial() as Result.Result<A, E>)
-  return () => pipe(result(), Result.getOrElse(() => fallback))
+  return () =>
+    pipe(
+      result(),
+      Result.getOrElse(() => fallback)
+    )
 }
