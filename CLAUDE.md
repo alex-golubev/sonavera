@@ -84,4 +84,44 @@ Features live in `src/lib/features/<name>/` with co-located code:
 - 2-space indentation, single quotes, no semicolons, no trailing commas, 120 char width
 - Prettier plugins: svelte, tailwindcss (auto-sorts classes)
 - ESLint flat config with TypeScript and Svelte plugins
-- FP/declarative style: prefer arrow functions (`const fn = <A>(...) =>`), `pipe`/composition, namespace imports for Effect modules (`* as Result`), tagged errors over plain `Error`
+
+### Strict Functional Programming
+
+This project follows a strict functional programming paradigm. **Every piece of code** must adhere to these rules without exception.
+
+#### Prohibited (NEVER use)
+
+- `async/await` — use `Effect.gen` / `Effect.promise` / `Effect.tryPromise` instead
+- `try/catch` — use `Effect.try` / `Effect.catchTag` / `Effect.catchAll` instead
+- `if/else` — use `Match.tag`, `Match.when`, `Option.match`, `Result.match*`, ternary expressions, or pattern matching via Effect
+- `for/while/do` loops — use `Array.map`, `Array.filter`, `Array.reduce`, `Effect.forEach`, `Stream.map`, recursion
+- `throw` — use `Effect.fail` with tagged errors (`Data.TaggedError`)
+- `class` (for business logic) — use `Data.TaggedClass`, `Data.Class`, `Schema.Class`, or plain objects
+- `let/var` for mutable state — use `Ref`, atoms, or Svelte 5 `$state()` runes (only in .svelte files)
+- Plain `Error` / `new Error(...)` — use `Data.TaggedError` subclasses
+- Imperative callbacks with side effects — wrap in `Effect.sync` / `Effect.gen`
+
+#### Required (ALWAYS use)
+
+- **Effect for all side effects**: IO, HTTP, timers, randomness, logging → `Effect.gen`, `Effect.map`, `Effect.flatMap`, `Effect.tap`
+- **`pipe` and composition**: chain transformations via `pipe(value, fn1, fn2, ...)`, not nested calls
+- **Namespace imports**: `import * as Result from '@effect/...result'`, `import * as Option from 'effect/Option'` — never destructure Effect modules
+- **Arrow functions**: `const fn = (a: A): B => ...` — no `function` declarations
+- **Small, pure functions**: each function does one thing, takes data in, returns data out
+- **Data separated from computations**: define schemas/types separately from logic that operates on them
+- **Tagged errors**: every error is a `Data.TaggedError` with `_tag` for pattern matching
+- **Exhaustive matching**: use `Match.exhaustive` or `Match.orElse` — never leave unhandled cases
+
+#### Encouraged patterns
+
+- **Currying**: `const add = (a: number) => (b: number) => a + b`
+- **Recursion** over loops where readability allows
+- **Monadic chaining**: `Effect.flatMap`, `Option.flatMap`, `Either.flatMap`
+- **`Schema.decode` / `Schema.encode`** for validation and parsing
+- **`Layer` for dependency injection**: compose services via `Layer.provide`, `Layer.mergeAll`
+- **`Stream`** for async sequences instead of callbacks or event emitters
+- **Point-free style** where it improves readability: `pipe(items, Array.map(toDto), Array.filter(isActive))`
+
+#### Svelte-specific exceptions
+
+Inside `.svelte` files, Svelte 5 runes (`$state()`, `$derived()`, `$effect()`, `$props()`) are idiomatic and allowed. Keep logic minimal in components — extract business logic into `store.ts` using Effect and atoms.

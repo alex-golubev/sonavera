@@ -47,10 +47,11 @@ vi.mock('@ricky0123/vad-web', () => ({
 vi.mock('$lib/rpc/client', () => ({
   AppClient: {
     query: vi.fn(() => {
-      const inner = Atom.make(Result.initial(true))
+      type R = Result.Result<{ done: boolean; items: Array<{ text: string }> }, TranscribeError>
+      const inner = Atom.make<R>(Result.initial(true))
       transcribeAtom = Atom.writable(
         (get) => get(inner),
-        (ctx, value) => ctx.set(inner, value === undefined ? Result.initial(true) : value)
+        (ctx, value) => ctx.set(inner, value === undefined ? Result.initial(true) : (value as R))
       ) as typeof transcribeAtom
       return transcribeAtom
     })
