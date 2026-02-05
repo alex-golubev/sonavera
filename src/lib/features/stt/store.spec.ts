@@ -16,7 +16,10 @@ type VadCallbacks = {
 
 let vadCallbacks: VadCallbacks
 let mockMic: { start: ReturnType<typeof vi.fn>; pause: ReturnType<typeof vi.fn>; destroy: ReturnType<typeof vi.fn> }
-let transcribeAtom: Atom.Writable<Result.Result<{ done: boolean; items: Array<{ text: string }> }, TranscribeError>, unknown>
+let transcribeAtom: Atom.Writable<
+  Result.Result<{ done: boolean; items: Array<{ text: string }> }, TranscribeError>,
+  unknown
+>
 
 // --- Mocks ---
 

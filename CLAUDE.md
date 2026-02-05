@@ -65,6 +65,7 @@ For RPC methods with `stream: true`, the client returns a `Writable<PullResult<A
 ### Feature Organization
 
 Features live in `src/lib/features/<name>/` with co-located code:
+
 - `store.ts` — atoms and business logic
 - `rpc.ts` — RPC group definition (schemas, methods)
 - `schema.ts` — shared types and tagged errors
