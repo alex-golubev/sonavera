@@ -104,7 +104,7 @@ Stores follow a consistent pattern across features:
 
 ### Strict Functional Programming
 
-This project follows a strict functional programming paradigm. **Every piece of code** must adhere to these rules without exception.
+This project follows a strict functional programming paradigm with pragmatic exceptions at external API boundaries.
 
 #### Prohibited (NEVER use)
 
@@ -114,9 +114,9 @@ This project follows a strict functional programming paradigm. **Every piece of 
 - `for/while/do` loops — use `Array.map`, `Array.filter`, `Array.reduce`, `Effect.forEach`, `Stream.map`, recursion
 - `throw` — use `Effect.fail` with tagged errors (`Data.TaggedError`)
 - `class` (for business logic) — use `Data.TaggedClass`, `Data.Class`, `Schema.Class`, or plain objects
-- `let/var` for mutable state — use `Ref`, atoms, or Svelte 5 `$state()` runes (only in .svelte files)
+- `let/var` for mutable state — use `Ref`, atoms, or Svelte 5 `$state()` runes (in `.svelte` / `.svelte.ts` files). See "Allowed exceptions" for boundary cases
 - Plain `Error` / `new Error(...)` — use `Data.TaggedError` subclasses
-- Imperative callbacks with side effects — wrap in `Effect.sync` / `Effect.gen`
+- Imperative side effects in Effect pipelines — wrap in `Effect.sync` / `Effect.gen`
 
 #### Required (ALWAYS use)
 
@@ -141,4 +141,12 @@ This project follows a strict functional programming paradigm. **Every piece of 
 
 #### Svelte-specific exceptions
 
-Inside `.svelte` files, Svelte 5 runes (`$state()`, `$derived()`, `$effect()`, `$props()`) are idiomatic and allowed. Keep logic minimal in components — extract business logic into `store.ts` using Effect and atoms.
+Inside `.svelte` and `.svelte.ts` files, Svelte 5 runes (`$state()`, `$derived()`, `$effect()`, `$props()`) are idiomatic and allowed. `.svelte.ts` files are compiled by the Svelte compiler and are the standard way to use runes outside components. Keep logic minimal in components — extract business logic into `store.ts` using Effect and atoms.
+
+#### Allowed exceptions
+
+The following patterns are permitted at **external API boundaries** where strict FP would add complexity without benefit:
+
+- **Closure-scoped `let` for browser API wrappers** (e.g. `pcm-player.ts`): Web Audio API callbacks (`source.onended`) are synchronous and cannot return `Effect`. Mutable state scoped to a factory function (like `createPlayer`) is allowed when it manages browser API lifecycle.
+- **Closure-scoped `let` for ephemeral stream state** (e.g. `consumedCount`, `isFirstChunk` in TTS store): function-local variables that track consumption within a single stream invocation and are reset on each new stream. Prefer atoms for state that persists across invocations.
+- **Direct `registry.set()` in external callbacks**: callbacks passed to third-party libraries (VAD `onSpeechStart`/`onSpeechEnd`), DOM event handlers (`source.onended`), and `registry.subscribe()` expect `() => void` — wrapping in `Effect.sync` + `Effect.runSync` adds noise without composability benefit. Use `Effect.sync` only when the callback is **part of an Effect pipeline** (e.g. inside `Effect.andThen`).

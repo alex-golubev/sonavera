@@ -27,28 +27,25 @@ const transcribeEffect = (registry: Registry.Registry, audio: Uint8Array, langua
   }).pipe(
     Effect.provide(FetchHttpClient.layer),
     Effect.catchAll((err) => Effect.sync(() => registry.set(error, String(err)))),
-    Effect.ensuring(
-      Effect.sync(() => {
-        registry.set(transcribing, false)
-        registry.set(fiberRef, undefined)
-      })
-    )
+    Effect.ensuring(Effect.sync(() => registry.set(transcribing, false)))
   )
 
 export const consumeTranscription = (registry: Registry.Registry, audio: Uint8Array, language: string) => {
   const prev = registry.get(fiberRef)
-  void pipe(
-    prev ? Fiber.interrupt(prev) : Effect.void,
-    Effect.andThen(
-      Effect.sync(() => {
-        registry.set(text, '')
-        registry.set(transcribing, true)
-        registry.set(error, '')
-        registry.set(fiberRef, Effect.runFork(transcribeEffect(registry, audio, language)))
-      })
-    ),
-    Effect.runFork
+  const fiber = Effect.runFork(
+    pipe(
+      prev ? Fiber.interrupt(prev) : Effect.void,
+      Effect.andThen(
+        Effect.sync(() => {
+          registry.set(text, '')
+          registry.set(transcribing, true)
+          registry.set(error, '')
+        })
+      ),
+      Effect.andThen(transcribeEffect(registry, audio, language))
+    )
   )
+  registry.set(fiberRef, fiber)
 }
 
 export const interruptFiber = (registry: Registry.Registry) =>

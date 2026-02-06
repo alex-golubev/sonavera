@@ -2,6 +2,7 @@ import { Atom, Result, type Registry } from '$lib/effect-atom'
 import { Effect, Match, pipe } from 'effect'
 import { AppClient } from '$lib/rpc/client'
 import { type PCMPlayer, createPlayer, pcmConfig } from './pcm-player'
+import type { TtsVoice } from './schema'
 
 // --- State atoms ---
 
@@ -57,7 +58,7 @@ const ensurePlayer = (registry: Registry.Registry): Effect.Effect<PCMPlayer, str
 
 // --- Stream consumption ---
 
-const consumeTts = (registry: Registry.Registry, text: string, voice: string) => {
+const consumeTts = (registry: Registry.Registry, text: string, voice: TtsVoice) => {
   resetAll(registry)
   registry.set(loading, true)
   registry.set(error, '')
@@ -128,7 +129,7 @@ export const warmup = (registry: Registry.Registry) =>
     )
   })
 
-export const speak = (registry: Registry.Registry, text: string, voice: string) =>
+export const speak = (registry: Registry.Registry, text: string, voice: TtsVoice) =>
   Effect.sync(() => (registry.get(muted) ? undefined : consumeTts(registry, text, voice)))
 
 export const toggleMute = (registry: Registry.Registry) =>

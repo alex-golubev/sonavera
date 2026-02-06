@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream'
 import { Context, Effect, Layer, Stream, pipe } from 'effect'
 import { OpenAiClient, OpenAiClientLive } from '$lib/server/openai'
-import { TtsError } from '../schema'
+import { TtsError, type TtsVoice } from '../schema'
 
 const VOICE_INSTRUCTIONS = 'Speak clearly at a natural pace, suitable for language learners.'
 
@@ -14,7 +14,7 @@ const bodyToStream = (body: ReadableStream | null) =>
 
 export class OpenAiTts extends Context.Tag('OpenAiTts')<
   OpenAiTts,
-  { readonly speakStream: (text: string, voice: string) => Stream.Stream<Uint8Array, TtsError> }
+  { readonly speakStream: (text: string, voice: TtsVoice) => Stream.Stream<Uint8Array, TtsError> }
 >() {}
 
 export const OpenAiTtsLive = Layer.effect(
@@ -29,7 +29,7 @@ export const OpenAiTtsLive = Layer.effect(
             try: () =>
               client.audio.speech.create({
                 model: 'gpt-4o-mini-tts',
-                voice: voice as 'coral',
+                voice,
                 input: text,
                 instructions: VOICE_INSTRUCTIONS,
                 response_format: 'pcm'
