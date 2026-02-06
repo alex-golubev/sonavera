@@ -62,7 +62,7 @@ For RPC methods with `stream: true`, the client returns a `Writable<PullResult<A
 5. After each success chunk, call `registry.set(atom, undefined)` to pull next — without this, the stream stalls
 6. `NoSuchElementException` in error = end of stream, not a real error
 
-### Feature Organization
+### Adding a New Feature
 
 Features live in `src/lib/features/<name>/` with co-located code:
 
@@ -71,6 +71,23 @@ Features live in `src/lib/features/<name>/` with co-located code:
 - `schema.ts` — shared types and tagged errors
 - `server/` — server-side handlers
 - `components/` — Svelte components
+
+To wire up a new feature:
+
+1. Define `FeatureRpc` group in `rpc.ts` with schemas and methods
+2. Merge into `RootRpc` in `src/lib/rpc/rpc.ts` via `.merge(FeatureRpc)`
+3. Create server handler exporting `FeatureLive` layer (use `RpcGroup.toLayer` + `Layer.provide`)
+4. Add `FeatureLive` to `Layer.mergeAll(...)` in `src/lib/server/composition.ts`
+
+### Store Patterns
+
+Stores follow a consistent pattern across features:
+
+- **State atoms**: exported `Atom.make(...)` for UI-facing state (e.g. `listening`, `playing`, `error`)
+- **Internal refs**: `Atom.keepAlive(Atom.make(...))` for values only used via `registry.get()`/`registry.set()` — **must** use `keepAlive` or they get garbage collected silently
+- **`disposeStreamRef`**: every streaming feature stores `() => { unsubscribe(); unmount() }` for cleanup
+- **PullResult accumulation**: items are cumulative. For text streams (STT), overwrite on each pull. For binary streams (TTS), track `consumedCount` and use `items.slice(consumedCount)` for new items only
+- **Public API**: exported functions take `registry: Registry.Registry` as first arg, return `Effect.Effect`
 
 ## Testing
 

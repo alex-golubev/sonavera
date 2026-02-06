@@ -1,7 +1,7 @@
 import { Atom, Result, type Registry } from '$lib/effect-atom'
 import { Effect, Match, pipe } from 'effect'
 import { AppClient } from '$lib/rpc/client'
-import { type PCMPlayer, createPlayer, PCM_SAMPLE_RATE } from './pcm-player'
+import { type PCMPlayer, createPlayer, pcmConfig } from './pcm-player'
 
 // --- State atoms ---
 
@@ -43,7 +43,7 @@ const ensurePlayer = (registry: Registry.Registry): Effect.Effect<PCMPlayer, str
     const player =
       registry.get(playerRef) ??
       (() => {
-        const p = createPlayer(new AudioContext({ sampleRate: PCM_SAMPLE_RATE }))
+        const p = createPlayer(new AudioContext({ sampleRate: pcmConfig.sampleRate }))
         registry.set(playerRef, p)
         return p
       })()
@@ -120,7 +120,13 @@ const consumeTts = (registry: Registry.Registry, text: string, voice: string) =>
 // --- Public API ---
 
 export const warmup = (registry: Registry.Registry) =>
-  Effect.sync(() => pipe(ensurePlayer(registry), Effect.catchAll(() => Effect.void), Effect.runPromise))
+  Effect.sync(() => {
+    void pipe(
+      ensurePlayer(registry),
+      Effect.catchAll(() => Effect.void),
+      Effect.runPromise
+    )
+  })
 
 export const speak = (registry: Registry.Registry, text: string, voice: string) =>
   Effect.sync(() => (registry.get(muted) ? undefined : consumeTts(registry, text, voice)))
@@ -134,5 +140,7 @@ export const toggleMute = (registry: Registry.Registry) =>
 export const destroy = (registry: Registry.Registry) =>
   Effect.sync(() => {
     resetAll(registry)
+    void registry.get(playerRef)?.context.close()
+    registry.set(playerRef, undefined)
     registry.set(error, '')
   })

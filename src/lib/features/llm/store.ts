@@ -12,7 +12,7 @@ export const streamingText = Atom.make('')
 
 // --- Internal ---
 
-const disposeStreamRef = Atom.make<(() => void) | undefined>(undefined)
+const disposeStreamRef = Atom.keepAlive(Atom.make<(() => void) | undefined>(undefined))
 
 const resetStream = (registry: Registry.Registry) => {
   registry.get(disposeStreamRef)?.()

@@ -1,10 +1,24 @@
 import { pipe } from 'effect'
 
-export const PCM_SAMPLE_RATE = 24000
+// --- Config (data) ---
 
-const BYTES_PER_SAMPLE = 2
-const PRE_BUFFER_BYTES = Math.floor((PCM_SAMPLE_RATE * 300) / 1000) * BYTES_PER_SAMPLE
-const LOOKAHEAD_SEC = 0.005
+type PCMConfig = {
+  readonly sampleRate: number
+  readonly bytesPerSample: number
+  readonly preBufferMs: number
+  readonly lookaheadSec: number
+}
+
+export const pcmConfig: PCMConfig = {
+  sampleRate: 24000,
+  bytesPerSample: 2,
+  preBufferMs: 300,
+  lookaheadSec: 0.005
+}
+
+// --- Derived computations ---
+
+const preBufferBytes = (c: PCMConfig): number => Math.floor((c.sampleRate * c.preBufferMs) / 1000) * c.bytesPerSample
 
 // --- Pure utility functions ---
 
@@ -16,17 +30,39 @@ const concatBytes = (a: Uint8Array, b: Uint8Array): Uint8Array => {
 }
 
 const alignToSampleBoundary = (bytes: Uint8Array): [aligned: Uint8Array, remainder: Uint8Array] => {
-  const aligned = bytes.length - (bytes.length % BYTES_PER_SAMPLE)
+  const aligned = bytes.length - (bytes.length % pcmConfig.bytesPerSample)
   return [bytes.slice(0, aligned), bytes.slice(aligned)]
 }
 
 const pcmToFloat32 = (pcm: Uint8Array): Float32Array => {
   const view = new DataView(pcm.buffer, pcm.byteOffset, pcm.byteLength)
   return Float32Array.from(
-    { length: pcm.length / BYTES_PER_SAMPLE },
-    (_, i) => view.getInt16(i * BYTES_PER_SAMPLE, true) / 32768
+    { length: pcm.length / pcmConfig.bytesPerSample },
+    (_, i) => view.getInt16(i * pcmConfig.bytesPerSample, true) / 32768
   )
 }
+
+// --- Player state (data) ---
+
+type PlayerState = {
+  nextPlayTime: number
+  pendingBytes: Uint8Array
+  preBuffer: Uint8Array
+  isBuffering: boolean
+  finished: boolean
+  drainCallback: (() => void) | undefined
+  activeSources: Set<AudioBufferSourceNode>
+}
+
+const initialState = (): PlayerState => ({
+  nextPlayTime: 0,
+  pendingBytes: new Uint8Array(0),
+  preBuffer: new Uint8Array(0),
+  isBuffering: true,
+  finished: false,
+  drainCallback: undefined,
+  activeSources: new Set()
+})
 
 // --- Player ---
 
@@ -38,71 +74,60 @@ export type PCMPlayer = {
 }
 
 export const createPlayer = (ctx: AudioContext): PCMPlayer => {
-  let nextPlayTime = 0
-  let pendingBytes: Uint8Array = new Uint8Array(0)
-  let preBuffer: Uint8Array = new Uint8Array(0)
-  let isBuffering = true
-  let finished = false
-  let drainCallback: (() => void) | undefined
-  const activeSources = new Set<AudioBufferSourceNode>()
+  let state = initialState()
 
   const checkDrained = (): void => {
-    pipe(finished && activeSources.size === 0, (ready) => ready && drainCallback?.())
+    pipe(state.finished && state.activeSources.size === 0, (ready) => ready && state.drainCallback?.())
   }
 
   const scheduleAudio = (floatData: Float32Array): void => {
-    const buffer = ctx.createBuffer(1, floatData.length, PCM_SAMPLE_RATE)
+    const buffer = ctx.createBuffer(1, floatData.length, pcmConfig.sampleRate)
     buffer.getChannelData(0).set(floatData)
     const source = ctx.createBufferSource()
     source.buffer = buffer
     source.connect(ctx.destination)
-    const startTime = Math.max(ctx.currentTime + LOOKAHEAD_SEC, nextPlayTime)
+    const startTime = Math.max(ctx.currentTime + pcmConfig.lookaheadSec, state.nextPlayTime)
     source.start(startTime)
-    activeSources.add(source)
+    state.activeSources.add(source)
     source.onended = () => {
-      activeSources.delete(source)
+      state.activeSources.delete(source)
       checkDrained()
     }
-    nextPlayTime = startTime + buffer.duration
+    state.nextPlayTime = startTime + buffer.duration
   }
 
   const processBytes = (bytes: Uint8Array): void => {
-    const [aligned, remainder] = alignToSampleBoundary(concatBytes(pendingBytes, bytes))
-    pendingBytes = remainder
+    const [aligned, remainder] = alignToSampleBoundary(concatBytes(state.pendingBytes, bytes))
+    state.pendingBytes = remainder
     pipe(aligned.length > 0, (hasData) => hasData && scheduleAudio(pcmToFloat32(aligned)))
   }
 
   const flushPreBuffer = (): void => {
-    const buffered = preBuffer
-    preBuffer = new Uint8Array(0)
-    isBuffering = false
+    const buffered = state.preBuffer
+    state.preBuffer = new Uint8Array(0)
+    state.isBuffering = false
     processBytes(buffered)
   }
 
   const handleBuffering = (bytes: Uint8Array): void => {
-    preBuffer = concatBytes(preBuffer, bytes)
-    pipe(preBuffer.length >= PRE_BUFFER_BYTES, (ready) => ready && flushPreBuffer())
+    state.preBuffer = concatBytes(state.preBuffer, bytes)
+    pipe(state.preBuffer.length >= preBufferBytes(pcmConfig), (ready) => ready && flushPreBuffer())
   }
 
   const reset = (): void => {
-    activeSources.forEach((s) => {
+    state.activeSources.forEach((s) => {
       s.stop()
       s.disconnect()
     })
-    activeSources.clear()
-    nextPlayTime = 0
-    pendingBytes = new Uint8Array(0)
-    preBuffer = new Uint8Array(0)
-    isBuffering = true
-    finished = false
-    drainCallback = undefined
+    state = initialState()
   }
 
   return {
-    playChunk: (pcmBytes) => (isBuffering ? handleBuffering(pcmBytes) : processBytes(pcmBytes)),
+    playChunk: (pcmBytes) => (state.isBuffering ? handleBuffering(pcmBytes) : processBytes(pcmBytes)),
     finish: (onDrained) => {
-      finished = true
-      drainCallback = onDrained
+      pipe(state.isBuffering, (buffering) => buffering && flushPreBuffer())
+      state.finished = true
+      state.drainCallback = onDrained
       checkDrained()
     },
     stop: reset,
