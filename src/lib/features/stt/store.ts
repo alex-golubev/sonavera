@@ -1,7 +1,6 @@
 import type { Registry } from '$lib/effect-atom'
-import { Effect, pipe } from 'effect'
-import { error, listening, speaking, transcribing, text, ready, vadRef } from './atoms'
-import { interruptFiber } from './transcribe'
+import { Effect, Fiber, Option, pipe } from 'effect'
+import { error, fiberRef, listening, speaking, transcribing, text, ready, vadRef } from './atoms'
 import { createVad, toggleVad } from './vad'
 
 export { listening, speaking, transcribing, text, error, ready, initializing } from './atoms'
@@ -17,18 +16,19 @@ export const toggle = (registry: Registry.Registry, language: string) =>
   )
 
 export const destroy = (registry: Registry.Registry) =>
-  pipe(
-    interruptFiber(registry),
-    Effect.andThen(
-      Effect.sync(() => {
-        registry.get(vadRef)?.destroy()
-        registry.set(vadRef, undefined)
-        registry.set(listening, false)
-        registry.set(speaking, false)
-        registry.set(transcribing, false)
-        registry.set(text, '')
-        registry.set(error, '')
-        registry.set(ready, false)
-      })
+  Effect.sync(() => {
+    const fiber = registry.get(fiberRef)
+    registry.set(fiberRef, undefined)
+    registry.get(vadRef)?.destroy()
+    registry.set(vadRef, undefined)
+    registry.set(listening, false)
+    registry.set(speaking, false)
+    registry.set(transcribing, false)
+    registry.set(text, '')
+    registry.set(error, '')
+    registry.set(ready, false)
+    pipe(
+      Option.fromNullable(fiber),
+      Option.map((f) => Effect.runFork(Fiber.interrupt(f)))
     )
-  )
+  })

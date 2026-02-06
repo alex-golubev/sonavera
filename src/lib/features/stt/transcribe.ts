@@ -47,10 +47,3 @@ export const consumeTranscription = (registry: Registry.Registry, audio: Uint8Ar
   )
   registry.set(fiberRef, fiber)
 }
-
-export const interruptFiber = (registry: Registry.Registry) =>
-  Effect.gen(function* () {
-    const fiber = registry.get(fiberRef)
-    yield* fiber ? Fiber.interrupt(fiber) : Effect.void
-    registry.set(fiberRef, undefined)
-  })

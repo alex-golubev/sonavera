@@ -1,6 +1,6 @@
 import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform'
 import { Atom, type Registry } from '$lib/effect-atom'
-import { Effect, Fiber, Stream, pipe } from 'effect'
+import { Effect, Fiber, Option, Stream, pipe } from 'effect'
 import type { LlmMessage } from './schema'
 
 // --- State atoms ---
@@ -13,13 +13,6 @@ export const streamingText = Atom.make('')
 // --- Internal ---
 
 const fiberRef = Atom.keepAlive(Atom.make<Fiber.RuntimeFiber<void, unknown> | undefined>(undefined))
-
-const interruptFiber = (registry: Registry.Registry) =>
-  Effect.gen(function* () {
-    const fiber = registry.get(fiberRef)
-    yield* fiber ? Fiber.interrupt(fiber) : Effect.void
-    registry.set(fiberRef, undefined)
-  })
 
 const streamEffect = (registry: Registry.Registry) =>
   Effect.gen(function* () {
@@ -78,14 +71,15 @@ export const send = (registry: Registry.Registry, userMessage: string) =>
   })
 
 export const reset = (registry: Registry.Registry) =>
-  pipe(
-    interruptFiber(registry),
-    Effect.andThen(
-      Effect.sync(() => {
-        registry.set(messages, [])
-        registry.set(responding, false)
-        registry.set(streamingText, '')
-        registry.set(error, '')
-      })
+  Effect.sync(() => {
+    const fiber = registry.get(fiberRef)
+    registry.set(fiberRef, undefined)
+    registry.set(messages, [])
+    registry.set(responding, false)
+    registry.set(streamingText, '')
+    registry.set(error, '')
+    pipe(
+      Option.fromNullable(fiber),
+      Option.map((f) => Effect.runFork(Fiber.interrupt(f)))
     )
-  )
+  })
