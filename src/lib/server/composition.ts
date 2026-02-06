@@ -8,6 +8,6 @@ import { RootRpc } from '$lib/rpc/rpc'
 
 const HandlersLive = Layer.mergeAll(SttLive, LlmLive, TtsLive)
 
-const ServerLayer = Layer.mergeAll(HandlersLive, RpcSerialization.layerNdjson, HttpServer.layerContext)
+const ServerLayer = Layer.mergeAll(HandlersLive, RpcSerialization.layerMsgPack, HttpServer.layerContext)
 
 export const { handler } = RpcServer.toWebHandler(RootRpc, { layer: ServerLayer })

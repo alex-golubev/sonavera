@@ -4,7 +4,7 @@ import { TranscribeChunk, TranscribeError } from './schema'
 
 export class SttRpc extends RpcGroup.make(
   Rpc.make('Transcribe', {
-    payload: { audio: Schema.Uint8ArrayFromBase64, language: Schema.String },
+    payload: { audio: Schema.Uint8ArrayFromSelf, language: Schema.String },
     success: TranscribeChunk,
     error: TranscribeError,
     stream: true
