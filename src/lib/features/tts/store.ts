@@ -1,6 +1,6 @@
-import { Atom, Result, type Registry } from '$lib/effect-atom'
-import { Effect, Match, pipe } from 'effect'
-import { AppClient } from '$lib/rpc/client'
+import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform'
+import { Atom, type Registry } from '$lib/effect-atom'
+import { Effect, Fiber, Option, Stream, pipe } from 'effect'
 import { type PCMPlayer, createPlayer, pcmConfig } from './pcm-player'
 import type { TtsVoice } from './schema'
 
@@ -13,15 +13,10 @@ export const muted = Atom.make(false)
 
 // --- Internal refs ---
 
-const disposeStreamRef = Atom.keepAlive(Atom.make<(() => void) | undefined>(undefined))
+const fiberRef = Atom.keepAlive(Atom.make<Fiber.RuntimeFiber<void, unknown> | undefined>(undefined))
 const playerRef = Atom.keepAlive(Atom.make<PCMPlayer | undefined>(undefined))
 
 // --- Helpers ---
-
-const resetStream = (registry: Registry.Registry) => {
-  registry.get(disposeStreamRef)?.()
-  registry.set(disposeStreamRef, undefined)
-}
 
 const stopPlayer = (registry: Registry.Registry) => {
   registry.get(playerRef)?.stop()
@@ -29,7 +24,6 @@ const stopPlayer = (registry: Registry.Registry) => {
 }
 
 const resetAll = (registry: Registry.Registry) => {
-  resetStream(registry)
   stopPlayer(registry)
   registry.set(loading, false)
 }
@@ -58,64 +52,59 @@ const ensurePlayer = (registry: Registry.Registry): Effect.Effect<PCMPlayer, str
 
 // --- Stream consumption ---
 
-const consumeTts = (registry: Registry.Registry, text: string, voice: TtsVoice) => {
-  resetAll(registry)
-  registry.set(loading, true)
-  registry.set(error, '')
+const streamEffect = (registry: Registry.Registry, text: string, voice: TtsVoice) =>
+  Effect.gen(function* () {
+    const player = yield* ensurePlayer(registry)
+    const client = yield* HttpClient.HttpClient
+    const request = yield* pipe(HttpClientRequest.post('/api/tts'), HttpClientRequest.bodyJson({ text, voice }))
+    const response = yield* client.execute(request)
 
-  let consumedCount = 0
-  let isFirstChunk = true
-
-  void pipe(
-    ensurePlayer(registry),
-    Effect.andThen((player) =>
-      Effect.sync(() => {
-        const atom = AppClient.query('Tts', { text, voice })
-        const unmount = registry.mount(atom)
-
-        const markPlaying = () => {
-          isFirstChunk = false
-          registry.set(loading, false)
-          registry.set(playing, true)
-        }
-
-        const onStreamEnd = () => {
-          player.finish(() => registry.set(playing, false))
-          resetStream(registry)
-        }
-
-        const unsubscribe = registry.subscribe(atom, () =>
-          pipe(
-            registry.get(atom),
-            Result.matchWithWaiting({
-              onWaiting: () => {},
-              onSuccess: ({ value: { items, done } }) => {
-                const newItems = items.slice(consumedCount)
-                consumedCount = items.length
-                newItems.forEach((c) => player.playChunk(c.audio))
-                pipe(isFirstChunk && newItems.length > 0, (shouldMark) => shouldMark && markPlaying())
-                pipe(done, (d) => (d ? onStreamEnd() : registry.set(atom, undefined)))
-              },
-              onError: (err) =>
-                pipe(
-                  Match.value(err),
-                  Match.tag('NoSuchElementException', () => onStreamEnd()),
-                  Match.orElse((e) => setError(registry, String(e)))
-                ),
-              onDefect: () => setError(registry, 'Unknown error')
-            })
-          )
-        )
-
-        registry.set(disposeStreamRef, () => {
-          unsubscribe()
-          unmount()
+    yield* response.status >= 400
+      ? Effect.gen(function* () {
+          const msg = yield* response.text
+          setError(registry, msg)
         })
-      })
-    ),
+      : pipe(
+          response.stream,
+          Stream.mapEffect((chunk) =>
+            Effect.sync(() => {
+              player.playChunk(chunk)
+              pipe(
+                registry.get(loading),
+                (isLoading) =>
+                  isLoading &&
+                  (() => {
+                    registry.set(loading, false)
+                    registry.set(playing, true)
+                  })()
+              )
+            })
+          ),
+          Stream.runDrain,
+          Effect.andThen(Effect.sync(() => player.finish(() => registry.set(playing, false))))
+        )
+  }).pipe(
+    Effect.provide(FetchHttpClient.layer),
     Effect.catchAll((err) => Effect.sync(() => setError(registry, String(err)))),
-    Effect.runPromise
+    Effect.ensuring(Effect.sync(() => registry.set(loading, false)))
   )
+
+const consumeTts = (registry: Registry.Registry, text: string, voice: TtsVoice) => {
+  const prev = registry.get(fiberRef)
+  const fiber = Effect.runFork(
+    pipe(
+      prev ? Fiber.interrupt(prev) : Effect.void,
+      Effect.andThen(
+        Effect.sync(() => {
+          resetAll(registry)
+          registry.set(loading, true)
+          registry.set(error, '')
+        })
+      ),
+      Effect.andThen(streamEffect(registry, text, voice))
+    )
+  )
+  registry.set(fiberRef, fiber)
 }
 
 // --- Public API ---
@@ -135,13 +124,25 @@ export const speak = (registry: Registry.Registry, text: string, voice: TtsVoice
 export const toggleMute = (registry: Registry.Registry) =>
   Effect.sync(() => {
     registry.set(muted, !registry.get(muted))
+    const fiber = registry.get(fiberRef)
+    registry.set(fiberRef, undefined)
     resetAll(registry)
+    pipe(
+      Option.fromNullable(fiber),
+      Option.map((f) => Effect.runFork(Fiber.interrupt(f)))
+    )
   })
 
 export const destroy = (registry: Registry.Registry) =>
   Effect.sync(() => {
+    const fiber = registry.get(fiberRef)
+    registry.set(fiberRef, undefined)
     resetAll(registry)
     void registry.get(playerRef)?.context.close()
     registry.set(playerRef, undefined)
     registry.set(error, '')
+    pipe(
+      Option.fromNullable(fiber),
+      Option.map((f) => Effect.runFork(Fiber.interrupt(f)))
+    )
   })

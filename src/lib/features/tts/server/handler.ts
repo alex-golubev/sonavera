@@ -1,14 +1,17 @@
-import { Effect, Layer, Stream } from 'effect'
-import { TtsRpc } from '../rpc'
+import { HttpApiBuilder, HttpServerResponse } from '@effect/platform'
+import { Effect, Layer, pipe } from 'effect'
+import { TtsApi } from '../api'
 import { OpenAiTts, OpenAiTtsLive } from './openai'
 
-const TtsHandlers = TtsRpc.toLayer(
-  Effect.gen(function* () {
-    const tts = yield* OpenAiTts
-    return {
-      Tts: ({ text, voice }) => tts.speakStream(text, voice).pipe(Stream.map((chunk) => ({ audio: chunk })))
-    }
-  })
+const TtsHandlers = HttpApiBuilder.group(TtsApi, 'tts', (handlers) =>
+  handlers.handle('speak', ({ payload }) =>
+    Effect.gen(function* () {
+      const tts = yield* OpenAiTts
+      return HttpServerResponse.stream(tts.speakStream(payload.text, payload.voice), {
+        contentType: 'application/octet-stream'
+      })
+    })
+  )
 )
 
-export const TtsLive = TtsHandlers.pipe(Layer.provide(OpenAiTtsLive))
+export const TtsLive = pipe(TtsHandlers, Layer.provide(OpenAiTtsLive))
