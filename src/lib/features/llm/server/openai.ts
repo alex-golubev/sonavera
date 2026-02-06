@@ -1,25 +1,28 @@
 import { Context, Effect, Layer, Option, Stream, pipe } from 'effect'
 import { OpenAiClient, OpenAiClientLive } from '$lib/server/openai'
 import { LlmError, type LlmMessage } from '../schema'
+import { languageName, type Language } from '$lib/features/language/schema'
 
-const systemPrompt = (language: string) =>
-  [
-    `You are a friendly and patient ${language} language tutor.`,
+const systemPrompt = (code: Language) => {
+  const name = languageName(code)
+  return [
+    `You are a friendly and patient ${name} language tutor.`,
     "Adapt your language complexity to match the user's level —",
     'if they make mistakes or use simple structures, simplify your responses;',
     'if they write fluently, challenge them more.',
     'Correct errors naturally by rephrasing,',
     'and occasionally introduce new vocabulary or grammar concepts.',
     'Keep responses concise and conversational.',
-    `Respond in ${language}.`
+    `Respond in ${name}.`
   ].join(' ')
+}
 
 const toLlmError = (error: unknown) => new LlmError({ message: String(error) })
 
 export class OpenAiLlm extends Context.Tag('OpenAiLlm')<
   OpenAiLlm,
   {
-    readonly llmStream: (messages: ReadonlyArray<LlmMessage>, language: string) => Stream.Stream<string, LlmError>
+    readonly llmStream: (messages: ReadonlyArray<LlmMessage>, language: Language) => Stream.Stream<string, LlmError>
   }
 >() {}
 

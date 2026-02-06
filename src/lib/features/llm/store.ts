@@ -1,6 +1,7 @@
 import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform'
 import { Atom, type Registry } from '$lib/effect-atom'
 import { Effect, Fiber, Option, Stream, pipe } from 'effect'
+import type { Language } from '$lib/features/language/schema'
 import { LlmError, type LlmMessage } from './schema'
 
 // --- State atoms ---
@@ -14,7 +15,7 @@ export const streamingText = Atom.make('')
 
 const fiberRef = Atom.keepAlive(Atom.make<Fiber.RuntimeFiber<void, unknown> | undefined>(undefined))
 
-const streamEffect = (registry: Registry.Registry, language: string) =>
+const streamEffect = (registry: Registry.Registry, language: Language) =>
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient
     const request = yield* pipe(
@@ -55,7 +56,7 @@ const streamEffect = (registry: Registry.Registry, language: string) =>
 
 // --- Public API ---
 
-export const send = (registry: Registry.Registry, userMessage: string, language: string) =>
+export const send = (registry: Registry.Registry, userMessage: string, language: Language) =>
   Effect.sync(() => {
     registry.set(messages, [...registry.get(messages), { role: 'user', content: userMessage }])
     const prev = registry.get(fiberRef)
