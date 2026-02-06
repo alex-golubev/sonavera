@@ -1,8 +1,11 @@
+import { HttpApiSchema } from '@effect/platform'
 import { Schema } from 'effect'
 
-export class LlmError extends Schema.TaggedError<LlmError>()('LlmError', {
-  message: Schema.String
-}) {}
+export class LlmError extends Schema.TaggedError<LlmError>()(
+  'LlmError',
+  { message: Schema.String },
+  HttpApiSchema.annotations({ status: 500 })
+) {}
 
 export const LlmRole = Schema.Literal('user', 'assistant')
 
@@ -14,4 +17,6 @@ export const LlmMessage = Schema.Struct({
 export type LlmMessage = typeof LlmMessage.Type
 export type LlmRole = typeof LlmRole.Type
 
-export const LlmChunk = Schema.Struct({ text: Schema.String })
+export const LlmPayload = Schema.Struct({
+  messages: Schema.Array(LlmMessage)
+})

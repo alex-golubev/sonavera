@@ -1,14 +1,23 @@
-import { Effect, Layer, Stream } from 'effect'
-import { LlmRpc } from '../rpc'
+import { HttpApiBuilder, HttpServerResponse } from '@effect/platform'
+import { Effect, Layer, Stream, pipe } from 'effect'
+import { LlmApi } from '../api'
 import { OpenAiLlm, OpenAiLlmLive } from './openai'
 
-const LlmHandlers = LlmRpc.toLayer(
-  Effect.gen(function* () {
-    const llm = yield* OpenAiLlm
-    return {
-      Llm: ({ messages }) => llm.llmStream(messages).pipe(Stream.map((delta) => ({ text: delta })))
-    }
-  })
+const encoder = new TextEncoder()
+
+const LlmHandlers = HttpApiBuilder.group(LlmApi, 'llm', (handlers) =>
+  handlers.handle('chat', ({ payload }) =>
+    Effect.gen(function* () {
+      const llm = yield* OpenAiLlm
+      return HttpServerResponse.stream(
+        pipe(
+          llm.llmStream(payload.messages),
+          Stream.map((delta) => encoder.encode(delta))
+        ),
+        { contentType: 'text/plain; charset=utf-8' }
+      )
+    })
+  )
 )
 
-export const LlmLive = LlmHandlers.pipe(Layer.provide(OpenAiLlmLive))
+export const LlmLive = pipe(LlmHandlers, Layer.provide(OpenAiLlmLive))
