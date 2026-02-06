@@ -29,6 +29,9 @@ export const destroy = (registry: Registry.Registry) =>
     registry.set(ready, false)
     pipe(
       Option.fromNullable(fiber),
-      Option.map((f) => Effect.runFork(Fiber.interrupt(f)))
+      Option.match({
+        onNone: () => {},
+        onSome: (f) => Effect.runFork(Fiber.interrupt(f))
+      })
     )
   })

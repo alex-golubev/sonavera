@@ -12,7 +12,7 @@ type PCMConfig = {
 export const pcmConfig: PCMConfig = {
   sampleRate: 24000,
   bytesPerSample: 2,
-  preBufferMs: 300,
+  preBufferMs: 150,
   lookaheadSec: 0.005
 }
 

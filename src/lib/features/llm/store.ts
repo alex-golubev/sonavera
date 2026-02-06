@@ -1,7 +1,7 @@
 import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform'
 import { Atom, type Registry } from '$lib/effect-atom'
 import { Effect, Fiber, Option, Stream, pipe } from 'effect'
-import type { LlmMessage } from './schema'
+import { LlmError, type LlmMessage } from './schema'
 
 // --- State atoms ---
 
@@ -26,7 +26,7 @@ const streamEffect = (registry: Registry.Registry) =>
     yield* response.status >= 400
       ? Effect.gen(function* () {
           const msg = yield* response.text
-          registry.set(error, msg)
+          return yield* Effect.fail(new LlmError({ message: msg }))
         })
       : pipe(
           response.stream,
@@ -39,13 +39,18 @@ const streamEffect = (registry: Registry.Registry) =>
               const fullText = registry.get(streamingText)
               registry.set(messages, [...registry.get(messages), { role: 'assistant', content: fullText }])
               registry.set(streamingText, '')
+              registry.set(responding, false)
             })
           )
         )
   }).pipe(
     Effect.provide(FetchHttpClient.layer),
-    Effect.catchAll((err) => Effect.sync(() => registry.set(error, String(err)))),
-    Effect.ensuring(Effect.sync(() => registry.set(responding, false)))
+    Effect.catchAll((err) =>
+      Effect.sync(() => {
+        registry.set(responding, false)
+        registry.set(error, String(err))
+      })
+    )
   )
 
 // --- Public API ---
@@ -80,6 +85,9 @@ export const reset = (registry: Registry.Registry) =>
     registry.set(error, '')
     pipe(
       Option.fromNullable(fiber),
-      Option.map((f) => Effect.runFork(Fiber.interrupt(f)))
+      Option.match({
+        onNone: () => {},
+        onSome: (f) => Effect.runFork(Fiber.interrupt(f))
+      })
     )
   })

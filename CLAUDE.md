@@ -25,19 +25,31 @@ Run a single test file: `pnpm vitest run src/path/to/file.spec.ts`
 - **Deployment**: Vercel via `@sveltejs/adapter-vercel`
 - **Package Manager**: pnpm (engine-strict mode enabled)
 - **State Management**: Custom `@effect-atom` Svelte 5 adapter in `src/lib/effect-atom/`
-- **RPC**: `@effect/rpc` with NDJSON streaming over HTTP (`/api/rpc`)
+- **HTTP API**: `@effect/platform` HttpApi with per-feature endpoints (`/api/stt`, `/api/llm`, `/api/tts`)
+- **RPC**: `@effect/rpc` with MsgPack serialization over HTTP (`/api/rpc`) — available for future features
 - **Environment**: Requires `OPENAI_API_KEY` (see `.env.example`); use `$env/dynamic/private` for runtime secrets
+
+### HTTP API Communication
+
+Client-server communication uses `@effect/platform` HttpApi with per-feature POST endpoints:
+
+- **API definition** (`src/lib/features/<name>/api.ts`): `HttpApiEndpoint` + `HttpApiGroup` + `HttpApi` defining typed endpoints with schemas and errors
+- **Server handler** (`src/lib/features/<name>/server/handler.ts`): `HttpApiBuilder.group` implementing endpoint handlers, exported as `FeatureLive` layer
+- **Composition** (`src/lib/server/composition.ts`): per-feature `HttpApiBuilder.api` + `HttpApiBuilder.toWebHandler` producing named handlers
+- **Routes** (`src/routes/api/<name>/+server.ts`): SvelteKit POST handler delegating `request` to the composed handler
+
+Each feature defines its own `HttpApi` and is composed independently. Streaming responses use `HttpServerResponse.stream` with binary (`application/octet-stream`) or text (`text/plain`) content types.
 
 ### RPC Communication
 
-Client-server communication uses `@effect/rpc` with a single POST endpoint:
+RPC infrastructure is available for features that benefit from `@effect/rpc` (e.g. streaming with PullResult atoms):
 
 - **Client** (`src/lib/rpc/client.ts`): `AppClient` tag built from `AtomRpc.Tag`, provides `.query()` for atoms
 - **Protocol** (`src/lib/rpc/protocol.ts`): HTTP protocol via `RpcClient.layerProtocolHttp` + `FetchHttpClient`
 - **Server** (`src/routes/api/rpc/+server.ts`): delegates to `RpcServer.toWebHandler`
-- **Composition** (`src/lib/server/composition.ts`): merges handler layers via `Layer.mergeAll`
+- **Composition** (`src/lib/server/composition.ts`): RPC handler layers merged via `Layer.mergeAll`
 
-RPC groups defined per feature (e.g. `SttRpc`), then merged into `RootRpc` (`src/lib/rpc/rpc.ts`).
+RPC groups defined per feature (e.g. `FeatureRpc`), then merged into `RootRpc` (`src/lib/rpc/rpc.ts`).
 
 ### @effect-atom Adapter
 
@@ -51,33 +63,23 @@ Bridges Effect ecosystem's atom model with Svelte 5 reactivity. Key design decis
 
 All hooks return **getter functions** (not raw values) — call `count()` not `count` in templates.
 
-### Streaming RPC (PullResult atoms)
-
-For RPC methods with `stream: true`, the client returns a `Writable<PullResult<A, E>, void>` atom:
-
-1. Create atom via `AppClient.query('Method', payload)`
-2. Mount: `registry.mount(atom)` — returns unmount fn
-3. Subscribe: `registry.subscribe(atom, cb)` — returns unsubscribe fn
-4. Handle results with `Result.matchWithWaiting` (not `matchWithError`) to skip waiting transitions
-5. After each success chunk, call `registry.set(atom, undefined)` to pull next — without this, the stream stalls
-6. `NoSuchElementException` in error = end of stream, not a real error
-
 ### Adding a New Feature
 
 Features live in `src/lib/features/<name>/` with co-located code:
 
-- `store.ts` — atoms and business logic
-- `rpc.ts` — RPC group definition (schemas, methods)
-- `schema.ts` — shared types and tagged errors
-- `server/` — server-side handlers
+- `api.ts` — HttpApi endpoint, group, and API definition (schemas, errors)
+- `store.ts` — atoms and business logic (client-side)
+- `schema.ts` — shared types, payloads, and tagged errors
+- `server/` — server-side handlers and service implementations
 - `components/` — Svelte components
 
 To wire up a new feature:
 
-1. Define `FeatureRpc` group in `rpc.ts` with schemas and methods
-2. Merge into `RootRpc` in `src/lib/rpc/rpc.ts` via `.merge(FeatureRpc)`
-3. Create server handler exporting `FeatureLive` layer (use `RpcGroup.toLayer` + `Layer.provide`)
-4. Add `FeatureLive` to `Layer.mergeAll(...)` in `src/lib/server/composition.ts`
+1. Define payload and error schemas in `schema.ts` (use `Schema.TaggedError` with `HttpApiSchema.annotations`)
+2. Define `HttpApiEndpoint`, `HttpApiGroup`, and `HttpApi` in `api.ts`
+3. Create server handler in `server/handler.ts` using `HttpApiBuilder.group`, export as `FeatureLive` layer
+4. Add handler composition in `src/lib/server/composition.ts`: `HttpApiBuilder.api(FeatureApi).pipe(Layer.provide(FeatureLive))` + `HttpApiBuilder.toWebHandler`
+5. Create SvelteKit route at `src/routes/api/<name>/+server.ts` delegating to the composed handler
 
 ### Store Patterns
 
@@ -85,8 +87,8 @@ Stores follow a consistent pattern across features:
 
 - **State atoms**: exported `Atom.make(...)` for UI-facing state (e.g. `listening`, `playing`, `error`)
 - **Internal refs**: `Atom.keepAlive(Atom.make(...))` for values only used via `registry.get()`/`registry.set()` — **must** use `keepAlive` or they get garbage collected silently
-- **`disposeStreamRef`**: every streaming feature stores `() => { unsubscribe(); unmount() }` for cleanup
-- **PullResult accumulation**: items are cumulative. For text streams (STT), overwrite on each pull. For binary streams (TTS), track `consumedCount` and use `items.slice(consumedCount)` for new items only
+- **Fiber-based streaming**: stores hold a `fiberRef` atom with the current `RuntimeFiber`. New streams interrupt the previous fiber before starting. Cleanup functions (`destroy`, `toggleMute`) interrupt via `Fiber.interrupt`
+- **HTTP streaming**: client creates `HttpClientRequest`, calls `client.execute(request)`, then pipes `response.stream` through `Stream.mapEffect` / `Stream.runForEach` for chunk processing
 - **Public API**: exported functions take `registry: Registry.Registry` as first arg, return `Effect.Effect`
 
 ## Testing
@@ -148,5 +150,5 @@ Inside `.svelte` and `.svelte.ts` files, Svelte 5 runes (`$state()`, `$derived()
 The following patterns are permitted at **external API boundaries** where strict FP would add complexity without benefit:
 
 - **Closure-scoped `let` for browser API wrappers** (e.g. `pcm-player.ts`): Web Audio API callbacks (`source.onended`) are synchronous and cannot return `Effect`. Mutable state scoped to a factory function (like `createPlayer`) is allowed when it manages browser API lifecycle.
-- **Closure-scoped `let` for ephemeral stream state** (e.g. `consumedCount`, `isFirstChunk` in TTS store): function-local variables that track consumption within a single stream invocation and are reset on each new stream. Prefer atoms for state that persists across invocations.
+- **Closure-scoped `let` for ephemeral stream state**: function-local variables that track consumption within a single stream invocation and are reset on each new stream. Prefer atoms for state that persists across invocations.
 - **Direct `registry.set()` in external callbacks**: callbacks passed to third-party libraries (VAD `onSpeechStart`/`onSpeechEnd`), DOM event handlers (`source.onended`), and `registry.subscribe()` expect `() => void` — wrapping in `Effect.sync` + `Effect.runSync` adds noise without composability benefit. Use `Effect.sync` only when the callback is **part of an Effect pipeline** (e.g. inside `Effect.andThen`).

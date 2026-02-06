@@ -2,7 +2,7 @@ import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform
 import { Atom, type Registry } from '$lib/effect-atom'
 import { Effect, Fiber, Option, Stream, pipe } from 'effect'
 import { type PCMPlayer, createPlayer, pcmConfig } from './pcm-player'
-import type { TtsVoice } from './schema'
+import { TtsError, type TtsVoice } from './schema'
 
 // --- State atoms ---
 
@@ -62,7 +62,7 @@ const streamEffect = (registry: Registry.Registry, text: string, voice: TtsVoice
     yield* response.status >= 400
       ? Effect.gen(function* () {
           const msg = yield* response.text
-          setError(registry, msg)
+          return yield* Effect.fail(new TtsError({ message: msg }))
         })
       : pipe(
           response.stream,
@@ -85,8 +85,7 @@ const streamEffect = (registry: Registry.Registry, text: string, voice: TtsVoice
         )
   }).pipe(
     Effect.provide(FetchHttpClient.layer),
-    Effect.catchAll((err) => Effect.sync(() => setError(registry, String(err)))),
-    Effect.ensuring(Effect.sync(() => registry.set(loading, false)))
+    Effect.catchAll((err) => Effect.sync(() => setError(registry, String(err))))
   )
 
 const consumeTts = (registry: Registry.Registry, text: string, voice: TtsVoice) => {
@@ -129,7 +128,10 @@ export const toggleMute = (registry: Registry.Registry) =>
     resetAll(registry)
     pipe(
       Option.fromNullable(fiber),
-      Option.map((f) => Effect.runFork(Fiber.interrupt(f)))
+      Option.match({
+        onNone: () => {},
+        onSome: (f) => Effect.runFork(Fiber.interrupt(f))
+      })
     )
   })
 
@@ -143,6 +145,9 @@ export const destroy = (registry: Registry.Registry) =>
     registry.set(error, '')
     pipe(
       Option.fromNullable(fiber),
-      Option.map((f) => Effect.runFork(Fiber.interrupt(f)))
+      Option.match({
+        onNone: () => {},
+        onSome: (f) => Effect.runFork(Fiber.interrupt(f))
+      })
     )
   })
