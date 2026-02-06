@@ -1,5 +1,6 @@
 import { HttpApiSchema } from '@effect/platform'
 import { Schema } from 'effect'
+import { Language } from '$lib/features/language/schema'
 
 export class LlmError extends Schema.TaggedError<LlmError>()(
   'LlmError',
@@ -18,5 +19,6 @@ export type LlmMessage = typeof LlmMessage.Type
 export type LlmRole = typeof LlmRole.Type
 
 export const LlmPayload = Schema.Struct({
-  messages: Schema.Array(LlmMessage)
+  messages: Schema.Array(LlmMessage),
+  language: Language
 })

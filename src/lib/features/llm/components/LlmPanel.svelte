@@ -3,10 +3,12 @@
   import { Effect, Option, pipe } from 'effect'
   import * as llm from '../store'
   import * as tts from '$lib/features/tts/store'
+  import { language as languageAtom } from '$lib/features/language/store'
   import TtsToggle from '$lib/features/tts/components/TtsToggle.svelte'
 
   const registry = getRegistry()
 
+  const language = useAtomValue(languageAtom)
   const messages = useAtomValue(llm.messages)
   const responding = useAtomValue(llm.responding)
   const streamingText = useAtomValue(llm.streamingText)
@@ -20,7 +22,7 @@
     const trimmed = input.trim()
     input = ''
     Effect.runSync(tts.warmup(registry))
-    Effect.runSync(llm.send(registry, trimmed))
+    Effect.runSync(llm.send(registry, trimmed, language()))
   }
 
   const handleKeydown = (e: KeyboardEvent) =>
@@ -65,14 +67,14 @@
           class="max-w-[75%] rounded-2xl px-4 py-2 text-sm
             {msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'}"
         >
-          {msg.content}
+          <span dir="auto">{msg.content}</span>
         </div>
       </div>
     {/each}
 
     {#if streamingText()}
       <div class="flex justify-start">
-        <div class="max-w-[75%] rounded-2xl bg-gray-100 px-4 py-2 text-sm text-gray-800">
+        <div dir="auto" class="max-w-[75%] rounded-2xl bg-gray-100 px-4 py-2 text-sm text-gray-800">
           {streamingText()}
           <span class="inline-block h-4 w-1 animate-pulse bg-gray-400"></span>
         </div>
@@ -95,6 +97,7 @@
   <div class="border-t border-gray-200 p-3">
     <div class="flex gap-2">
       <input
+        dir="auto"
         type="text"
         bind:value={input}
         onkeydown={handleKeydown}

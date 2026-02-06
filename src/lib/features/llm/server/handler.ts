@@ -11,7 +11,7 @@ const LlmHandlers = HttpApiBuilder.group(LlmApi, 'llm', (handlers) =>
       const llm = yield* OpenAiLlm
       return HttpServerResponse.stream(
         pipe(
-          llm.llmStream(payload.messages),
+          llm.llmStream(payload.messages, payload.language),
           Stream.map((delta) => encoder.encode(delta))
         ),
         { contentType: 'text/plain; charset=utf-8' }
