@@ -18,11 +18,10 @@
 </script>
 
 <select
-  value={lang()}
   onchange={handleChange}
   class="shrink-0 rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-8 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none"
 >
   {#each languages as l (l.code)}
-    <option value={l.code}>{l.nativeName}</option>
+    <option value={l.code} selected={l.code === lang()}>{l.nativeName}</option>
   {/each}
 </select>
