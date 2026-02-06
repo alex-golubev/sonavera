@@ -1,8 +1,7 @@
 <script lang="ts">
   import { useAtom, getRegistry } from '$lib/effect-atom'
   import { Effect, Schema } from 'effect'
-  import * as llm from '$lib/features/llm/store'
-  import * as stt from '$lib/features/stt/store'
+  import { onLanguageChange } from '$lib/features/session/reset'
   import { Language, languages } from '../schema'
   import { language as languageAtom } from '../store'
 
@@ -13,8 +12,7 @@
   const handleChange = (e: Event) => {
     const value = decodeLanguage((e.target as HTMLSelectElement).value)
     setLang(value)
-    Effect.runSync(llm.reset(registry))
-    Effect.runSync(stt.destroy(registry))
+    Effect.runSync(onLanguageChange(registry))
   }
 </script>
 

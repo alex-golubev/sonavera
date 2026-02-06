@@ -1,8 +1,7 @@
 <script lang="ts">
   import { useAtom, getRegistry } from '$lib/effect-atom'
   import { Effect, Schema } from 'effect'
-  import * as llm from '$lib/features/llm/store'
-  import * as stt from '$lib/features/stt/store'
+  import { onLevelChange } from '$lib/features/session/reset'
   import { Level, levels } from '../schema'
   import { level as levelAtom } from '../store'
 
@@ -13,8 +12,7 @@
   const handleChange = (e: Event) => {
     const value = decodeLevel((e.target as HTMLSelectElement).value)
     setLvl(value)
-    Effect.runSync(llm.reset(registry))
-    Effect.runSync(stt.destroy(registry))
+    Effect.runSync(onLevelChange(registry))
   }
 </script>
 

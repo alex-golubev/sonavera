@@ -16,12 +16,12 @@ export const streamingText = Atom.make('')
 
 const fiberRef = Atom.keepAlive(Atom.make<Fiber.RuntimeFiber<void, unknown> | undefined>(undefined))
 
-const streamEffect = (registry: Registry.Registry, language: Language, level: Level) =>
+const streamEffect = (registry: Registry.Registry, settings: { language: Language; level: Level }) =>
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient
     const request = yield* pipe(
       HttpClientRequest.post('/api/llm'),
-      HttpClientRequest.bodyJson({ messages: [...registry.get(messages)], language, level })
+      HttpClientRequest.bodyJson({ messages: [...registry.get(messages)], ...settings })
     )
     const response = yield* client.execute(request)
 
@@ -57,7 +57,11 @@ const streamEffect = (registry: Registry.Registry, language: Language, level: Le
 
 // --- Public API ---
 
-export const send = (registry: Registry.Registry, userMessage: string, language: Language, level: Level) =>
+export const send = (
+  registry: Registry.Registry,
+  userMessage: string,
+  settings: { language: Language; level: Level }
+) =>
   Effect.sync(() => {
     registry.set(messages, [...registry.get(messages), { role: 'user', content: userMessage }])
     const prev = registry.get(fiberRef)
@@ -71,7 +75,7 @@ export const send = (registry: Registry.Registry, userMessage: string, language:
             registry.set(error, '')
           })
         ),
-        Effect.andThen(streamEffect(registry, language, level))
+        Effect.andThen(streamEffect(registry, settings))
       )
     )
     registry.set(fiberRef, fiber)

@@ -15,5 +15,3 @@ export const levels: ReadonlyArray<{
   { code: 'C1', name: 'C1 — Advanced', description: 'Fluent and spontaneous expression' },
   { code: 'C2', name: 'C2 — Mastery', description: 'Native-level precision and nuance' }
 ]
-
-export const levelName = (code: Level): string => levels.find((l) => l.code === code)?.name ?? code
