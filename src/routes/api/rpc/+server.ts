@@ -1,4 +1,4 @@
 import type { RequestHandler } from './$types'
-import { handler } from '$lib/server/composition'
+import { rpcHandler } from '$lib/server/composition'
 
-export const POST: RequestHandler = ({ request }) => handler(request)
+export const POST: RequestHandler = ({ request }) => rpcHandler(request)

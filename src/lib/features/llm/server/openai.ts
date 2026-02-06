@@ -1,5 +1,5 @@
-import { Context, Effect, Layer, Option, Stream } from 'effect'
-import OpenAI from 'openai'
+import { Context, Effect, Layer, Option, Stream, pipe } from 'effect'
+import { OpenAiClient, OpenAiClientLive } from '$lib/server/openai'
 import { LlmError, type LlmMessage } from '../schema'
 
 const SYSTEM_PROMPT = [
@@ -13,6 +13,8 @@ const SYSTEM_PROMPT = [
   'Respond in English.'
 ].join(' ')
 
+const toLlmError = (error: unknown) => new LlmError({ message: String(error) })
+
 export class OpenAiLlm extends Context.Tag('OpenAiLlm')<
   OpenAiLlm,
   { readonly llmStream: (messages: ReadonlyArray<LlmMessage>) => Stream.Stream<string, LlmError> }
@@ -21,32 +23,30 @@ export class OpenAiLlm extends Context.Tag('OpenAiLlm')<
 export const OpenAiLlmLive = Layer.effect(
   OpenAiLlm,
   Effect.gen(function* () {
-    const { env } = yield* Effect.promise(() => import('$env/dynamic/private'))
-    const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+    const client = yield* OpenAiClient
 
     return OpenAiLlm.of({
       llmStream: (messages) =>
-        Stream.unwrap(
+        pipe(
           Effect.tryPromise({
-            try: async () => {
-              const response = await client.chat.completions.create({
+            try: () =>
+              client.chat.completions.create({
                 model: 'gpt-4.1-mini',
                 stream: true,
                 messages: [
                   { role: 'developer', content: SYSTEM_PROMPT },
                   ...messages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
                 ]
-              })
-              return Stream.fromAsyncIterable(response, (error) => new LlmError({ message: String(error) })).pipe(
-                Stream.filterMap((chunk) => {
-                  const delta = chunk.choices[0]?.delta?.content
-                  return delta ? Option.some(delta) : Option.none()
-                })
-              )
-            },
-            catch: (error) => new LlmError({ message: String(error) })
+              }),
+            catch: toLlmError
+          }),
+          Effect.map((response) => Stream.fromAsyncIterable(response, toLlmError)),
+          Stream.unwrap,
+          Stream.filterMap((chunk) => {
+            const delta = chunk.choices[0]?.delta?.content
+            return delta ? Option.some(delta) : Option.none()
           })
         )
     })
   })
-)
+).pipe(Layer.provide(OpenAiClientLive))

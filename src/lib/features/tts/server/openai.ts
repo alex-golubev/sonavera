@@ -1,9 +1,16 @@
 import { Readable } from 'node:stream'
-import { Context, Effect, Layer, Stream } from 'effect'
-import OpenAI from 'openai'
+import { Context, Effect, Layer, Stream, pipe } from 'effect'
+import { OpenAiClient, OpenAiClientLive } from '$lib/server/openai'
 import { TtsError } from '../schema'
 
 const VOICE_INSTRUCTIONS = 'Speak clearly at a natural pace, suitable for language learners.'
+
+const toTtsError = (error: unknown) => new TtsError({ message: String(error) })
+
+const bodyToStream = (body: ReadableStream | null) =>
+  body
+    ? Stream.fromAsyncIterable(Readable.fromWeb(body as import('node:stream/web').ReadableStream), toTtsError)
+    : Stream.fail(new TtsError({ message: 'Response body is null' }))
 
 export class OpenAiTts extends Context.Tag('OpenAiTts')<
   OpenAiTts,
@@ -13,32 +20,25 @@ export class OpenAiTts extends Context.Tag('OpenAiTts')<
 export const OpenAiTtsLive = Layer.effect(
   OpenAiTts,
   Effect.gen(function* () {
-    const { env } = yield* Effect.promise(() => import('$env/dynamic/private'))
-    const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+    const client = yield* OpenAiClient
 
     return OpenAiTts.of({
       speakStream: (text, voice) =>
-        Stream.unwrap(
+        pipe(
           Effect.tryPromise({
-            try: async () => {
-              const response = await client.audio.speech.create({
+            try: () =>
+              client.audio.speech.create({
                 model: 'gpt-4o-mini-tts',
                 voice: voice as 'coral',
                 input: text,
                 instructions: VOICE_INSTRUCTIONS,
                 response_format: 'pcm'
-              })
-              const body = response.body
-              return body
-                ? Stream.fromAsyncIterable(
-                    Readable.fromWeb(body as import('node:stream/web').ReadableStream),
-                    (error) => new TtsError({ message: String(error) })
-                  )
-                : Stream.fail(new TtsError({ message: 'Response body is null' }))
-            },
-            catch: (error) => new TtsError({ message: String(error) })
-          })
+              }),
+            catch: toTtsError
+          }),
+          Effect.map((response) => bodyToStream(response.body)),
+          Stream.unwrap
         )
     })
   })
-)
+).pipe(Layer.provide(OpenAiClientLive))
