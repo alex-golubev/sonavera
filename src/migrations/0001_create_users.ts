@@ -4,7 +4,7 @@ import { Effect } from 'effect'
 export default Effect.flatMap(
   SqlClient.SqlClient,
   (sql) => sql`
-    CREATE TABLE user (
+    CREATE TABLE account (
       id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       email           VARCHAR(255) NOT NULL UNIQUE,
       password_hash   VARCHAR(255) NOT NULL,
