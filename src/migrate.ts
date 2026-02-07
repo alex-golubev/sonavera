@@ -10,9 +10,7 @@ const program = PgMigrator.run({
   loader: PgMigrator.fromFileSystem(fileURLToPath(new URL('migrations', import.meta.url)))
 }).pipe(
   Effect.tap((results) =>
-    results.length === 0
-      ? Effect.log('No pending migrations')
-      : Effect.log(`Applied ${results.length} migration(s)`)
+    results.length === 0 ? Effect.log('No pending migrations') : Effect.log(`Applied ${results.length} migration(s)`)
   )
 )
 
