@@ -11,7 +11,8 @@ const withSilencedVadLogs = <A>(fn: () => A): A => {
     typeof args[0] === 'string' && args[0].startsWith('VAD |') ? undefined : orig.apply(console, args)
   const result = fn()
   const restore = () => { console.log = orig }
-  return result instanceof Promise ? result.finally(restore) as A : (restore(), result)
+  const sync = () => { restore(); return result }
+  return result instanceof Promise ? result.finally(restore) as A : sync()
 }
 
 const pauseVad = (registry: Registry.Registry, mic: MicVAD) =>
