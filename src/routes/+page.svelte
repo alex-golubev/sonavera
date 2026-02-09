@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
 
+  const { data } = $props()
   let scrolled = $state(false)
 
   $effect(() => {
@@ -23,7 +24,14 @@
   ]
 </script>
 
-<div class="min-h-screen bg-linear-to-b from-slate-50 to-white">
+<div class="relative min-h-screen bg-linear-to-b from-slate-50 to-white">
+  <!-- Background decoration -->
+  <div class="pointer-events-none absolute inset-0 overflow-hidden">
+    <div class="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-fuchsia-200/50 blur-3xl"></div>
+    <div class="absolute top-1/4 -left-40 h-80 w-80 rounded-full bg-indigo-200/50 blur-3xl"></div>
+    <div class="absolute top-1/3 left-1/2 h-60 w-60 -translate-x-1/2 rounded-full bg-amber-200/40 blur-3xl"></div>
+  </div>
+
   <!-- Navigation -->
   <nav
     class="sticky top-0 z-50 transition-all duration-300 {scrolled
@@ -66,31 +74,33 @@
       </div>
 
       <div class="flex items-center gap-4">
-        <a
-          href={resolve('/auth/login')}
-          class="hidden text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600 sm:block"
-        >
-          Log in
-        </a>
-        <a
-          href={resolve('/auth/register')}
-          class="rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-fuchsia-500/25"
-        >
-          Start free
-        </a>
+        {#if data.user}
+          <a
+            href={resolve('/chat')}
+            class="rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-fuchsia-500/25"
+          >
+            Go to chat
+          </a>
+        {:else}
+          <a
+            href={resolve('/auth/login')}
+            class="hidden text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600 sm:block"
+          >
+            Log in
+          </a>
+          <a
+            href={resolve('/auth/register')}
+            class="rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-fuchsia-500/25"
+          >
+            Start free
+          </a>
+        {/if}
       </div>
     </div>
   </nav>
 
   <!-- Hero Section -->
-  <section class="relative overflow-hidden px-4 pt-6 pb-20 sm:px-6 sm:pt-8 lg:px-8 lg:pt-10">
-    <!-- Background decoration -->
-    <div class="pointer-events-none absolute inset-0 overflow-hidden">
-      <div class="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-fuchsia-200/50 blur-3xl"></div>
-      <div class="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-indigo-200/50 blur-3xl"></div>
-      <div class="absolute top-1/3 left-1/2 h-60 w-60 -translate-x-1/2 rounded-full bg-amber-200/40 blur-3xl"></div>
-    </div>
-
+  <section class="relative px-4 pt-6 pb-20 sm:px-6 sm:pt-8 lg:px-8 lg:pt-10">
     <div class="relative mx-auto max-w-4xl text-center">
       <!-- Badge -->
       <div
@@ -119,10 +129,10 @@
       <!-- CTA Buttons -->
       <div class="mb-16 flex flex-col items-center justify-center gap-4 sm:flex-row">
         <a
-          href={resolve('/auth/register')}
+          href={resolve(data.user ? '/chat' : '/auth/register')}
           class="group flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-fuchsia-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-fuchsia-500/30 sm:w-auto"
         >
-          Start talking
+          {data.user ? 'Go to chat' : 'Start talking'}
           <svg
             class="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1"
             fill="none"

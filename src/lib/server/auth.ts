@@ -3,7 +3,8 @@ import { effectSqlAdapter } from 'better-auth-effect'
 import { dbRuntime } from '$lib/server/database'
 import { env } from '$env/dynamic/private'
 
-const getBaseURL = (): string => env.BETTER_AUTH_URL ?? (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : 'http://localhost:5173')
+const getBaseURL = (): string =>
+  env.BETTER_AUTH_URL ?? (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : 'http://localhost:5173')
 
 export const auth = betterAuth({
   baseURL: getBaseURL(),
