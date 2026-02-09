@@ -67,13 +67,13 @@
 
       <div class="flex items-center gap-4">
         <a
-          href={resolve('/')}
+          href={resolve('/auth/login')}
           class="hidden text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600 sm:block"
         >
           Log in
         </a>
         <a
-          href={resolve('/')}
+          href={resolve('/auth/register')}
           class="rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-fuchsia-500/25"
         >
           Start free
@@ -119,7 +119,7 @@
       <!-- CTA Buttons -->
       <div class="mb-16 flex flex-col items-center justify-center gap-4 sm:flex-row">
         <a
-          href={resolve('/')}
+          href={resolve('/auth/register')}
           class="group flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-fuchsia-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-fuchsia-500/30 sm:w-auto"
         >
           Start talking

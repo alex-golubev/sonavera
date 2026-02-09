@@ -1,6 +1,7 @@
 <script lang="ts">
   import { useAtomValue, getRegistry } from '$lib/effect-atom'
   import { Effect, Option, pipe } from 'effect'
+  import * as auth from '$lib/features/auth/store'
   import * as stt from '$lib/features/stt/store'
   import * as llm from '$lib/features/llm/store'
   import * as tts from '$lib/features/tts/store'
@@ -12,6 +13,8 @@
   import TtsToggle from '$lib/features/tts/components/TtsToggle.svelte'
 
   const registry = getRegistry()
+
+  const handleSignOut = () => Effect.runPromise(auth.signOut(registry))
 
   // --- Atoms ---
   const language = useAtomValue(languageAtom)
@@ -132,6 +135,20 @@
         <LanguageSelector />
         <LevelSelector />
         <TtsToggle />
+        <button
+          type="button"
+          aria-label="Sign out"
+          onclick={handleSignOut}
+          class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+        </button>
       </div>
     </div>
 
