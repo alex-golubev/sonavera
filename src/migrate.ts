@@ -1,10 +1,13 @@
 // noinspection ES6PreferShortImport
 
 import { NodeContext, NodeRuntime } from '@effect/platform-node'
-import { PgMigrator } from '@effect/sql-pg'
-import { Effect } from 'effect'
+import { PgClient, PgMigrator } from '@effect/sql-pg'
+import { Config, Effect } from 'effect'
 import { fileURLToPath } from 'node:url'
-import { DatabaseLive } from './lib/server/database'
+
+const DatabaseLive = PgClient.layerConfig({
+  url: Config.redacted('DATABASE_URL')
+})
 
 const program = PgMigrator.run({
   loader: PgMigrator.fromFileSystem(fileURLToPath(new URL('migrations', import.meta.url)))

@@ -27,7 +27,8 @@ Run a single test file: `pnpm vitest run src/path/to/file.spec.ts`
 - **State Management**: Custom `@effect-atom` Svelte 5 adapter in `src/lib/effect-atom/`
 - **HTTP API**: `@effect/platform` HttpApi with per-feature endpoints (`/api/stt`, `/api/llm`, `/api/tts`)
 - **RPC**: `@effect/rpc` with MsgPack serialization over HTTP (`/api/rpc`) — available for future features
-- **Environment**: Requires `OPENAI_API_KEY` (see `.env.example`); use `$env/dynamic/private` for runtime secrets
+- **Auth**: Better Auth with `better-auth-effect` adapter for `@effect/sql-pg`
+- **Environment**: Requires `OPENAI_API_KEY`, `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (see `.env.example`); use `$env/dynamic/private` for runtime secrets
 
 ### HTTP API Communication
 
@@ -80,6 +81,18 @@ To wire up a new feature:
 3. Create server handler in `server/handler.ts` using `HttpApiBuilder.group`, export as `FeatureLive` layer
 4. Add handler composition in `src/lib/server/composition.ts`: `HttpApiBuilder.api(FeatureApi).pipe(Layer.provide(FeatureLive))` + `HttpApiBuilder.toWebHandler`
 5. Create SvelteKit route at `src/routes/api/<name>/+server.ts` delegating to the composed handler
+
+### Authentication
+
+Better Auth handles all auth endpoints via SvelteKit hook — no custom `/api/auth/*` routes needed.
+
+- **Auth instance** (`src/lib/server/auth.ts`): `betterAuth()` config with `effectSqlAdapter`, email/password enabled, cookie-cached sessions (15 min), custom user fields (`nativeLanguage`, `targetLanguage`, `level`)
+- **Hook** (`src/hooks.server.ts`): `svelteKitHandler` intercepts `/api/auth/*` requests. Session is fetched and populated into `event.locals.user` / `event.locals.session` on every request
+- **DB adapter** (`better-auth-effect`): bridges Better Auth to `@effect/sql-pg` via shared `ManagedRuntime` from `src/lib/server/database.ts`
+- **Database** (`src/lib/server/database.ts`): `PgClient.layer` with `$env/dynamic/private` for SvelteKit; `src/migrate.ts` uses its own `PgClient.layerConfig` with `process.env` (runs via `--env-file=.env`). snake_case ↔ camelCase transforms configured at the PgClient level
+- **Schema**: 4 tables (`user`, `session`, `account`, `verification`) in `src/migrations/0001_create_auth_tables.ts`. ID generation delegated to PostgreSQL (`gen_random_uuid()`) via `advanced.database.generateId: false`
+- **Route protection**: `+layout.server.ts` checks `locals.user`, redirects to `/auth/login` if null
+- **Client** (`src/lib/features/auth/client.ts`): `createAuthClient()` from `better-auth/svelte` — provides `signIn`, `signUp`, `signOut`, `useSession`
 
 ### Store Patterns
 
