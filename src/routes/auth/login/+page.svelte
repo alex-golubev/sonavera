@@ -17,8 +17,8 @@
   }
 </script>
 
-<h1 class="mb-2 text-2xl font-bold text-gray-900">Welcome back</h1>
-<p class="mb-6 text-sm text-gray-500">Sign in to continue practicing</p>
+<h1 class="mb-2 text-center text-2xl font-bold text-gray-900">Welcome back</h1>
+<p class="mb-6 text-center text-sm text-gray-500">Sign in to continue practicing</p>
 
 <form onsubmit={handleSubmit} class="space-y-4">
   <div>

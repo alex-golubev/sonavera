@@ -4,6 +4,16 @@ import { Effect, pipe } from 'effect'
 import { error, initializing, listening, ready, speaking, vadRef } from './atoms'
 import { consumeTranscription } from './transcribe'
 
+// Suppress noisy VAD internal logs (https://github.com/ricky0123/vad/issues/253)
+const withSilencedVadLogs = <A>(fn: () => A): A => {
+  const orig = console.log
+  console.log = (...args: unknown[]) =>
+    typeof args[0] === 'string' && args[0].startsWith('VAD |') ? undefined : orig.apply(console, args)
+  const result = fn()
+  const restore = () => { console.log = orig }
+  return result instanceof Promise ? result.finally(restore) as A : (restore(), result)
+}
+
 const pauseVad = (registry: Registry.Registry, mic: MicVAD) =>
   pipe(
     Effect.tryPromise({ try: () => mic.pause(), catch: String }),
@@ -27,16 +37,18 @@ const initVad = (registry: Registry.Registry, language: string) =>
 
     const mic = yield* Effect.tryPromise({
       try: () =>
-        MicVAD.new({
-          baseAssetPath: '/vad/',
-          onnxWASMBasePath: '/vad/',
-          onSpeechStart: () => registry.set(speaking, true),
-          onSpeechEnd: (audio) => {
-            registry.set(speaking, false)
-            consumeTranscription(registry, new Uint8Array(utils.encodeWAV(audio)), language)
-          },
-          onVADMisfire: () => registry.set(speaking, false)
-        }),
+        withSilencedVadLogs(() =>
+          MicVAD.new({
+            baseAssetPath: '/vad/',
+            onnxWASMBasePath: '/vad/',
+            onSpeechStart: () => registry.set(speaking, true),
+            onSpeechEnd: (audio) => {
+              registry.set(speaking, false)
+              consumeTranscription(registry, new Uint8Array(utils.encodeWAV(audio)), language)
+            },
+            onVADMisfire: () => registry.set(speaking, false)
+          })
+        ),
       catch: String
     })
 

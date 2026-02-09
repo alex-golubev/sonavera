@@ -23,8 +23,8 @@
   }
 </script>
 
-<h1 class="mb-2 text-2xl font-bold text-gray-900">Create your account</h1>
-<p class="mb-6 text-sm text-gray-500">Start practicing languages with AI</p>
+<h1 class="mb-2 text-center text-2xl font-bold text-gray-900">Create your account</h1>
+<p class="mb-6 text-center text-sm text-gray-500">Start practicing languages with AI</p>
 
 <form onsubmit={handleSubmit} class="space-y-4">
   <div>
