@@ -37,7 +37,7 @@ const startVad = (registry: Registry.Registry, mic: MicVAD) =>
     )
   )
 
-const initVad = (registry: Registry.Registry, language: string) =>
+const initVad = (registry: Registry.Registry) =>
   Effect.gen(function* () {
     registry.set(initializing, true)
 
@@ -50,7 +50,7 @@ const initVad = (registry: Registry.Registry, language: string) =>
             onSpeechStart: () => registry.set(speaking, true),
             onSpeechEnd: (audio) => {
               registry.set(speaking, false)
-              consumeTranscription(registry, new Uint8Array(utils.encodeWAV(audio)), language)
+              consumeTranscription(registry, new Uint8Array(utils.encodeWAV(audio)))
             },
             onVADMisfire: () => registry.set(speaking, false)
           })
@@ -72,5 +72,5 @@ const initVad = (registry: Registry.Registry, language: string) =>
 export const toggleVad = (registry: Registry.Registry, mic: MicVAD) =>
   registry.get(listening) ? pauseVad(registry, mic) : startVad(registry, mic)
 
-export const createVad = (registry: Registry.Registry, language: string) =>
-  Effect.suspend(() => (registry.get(vadRef) || registry.get(initializing) ? Effect.void : initVad(registry, language)))
+export const createVad = (registry: Registry.Registry) =>
+  Effect.suspend(() => (registry.get(vadRef) || registry.get(initializing) ? Effect.void : initVad(registry)))

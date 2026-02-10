@@ -1,4 +1,5 @@
-import { languageName, type Language } from '$lib/features/language/schema'
+import { languageName } from '$lib/features/language/schema'
+import type { UserSettings } from '$lib/server/user-settings'
 import type { Level } from '$lib/features/level/schema'
 
 const levelInstructions: Record<Level, string> = {
@@ -44,13 +45,16 @@ const levelInstructions: Record<Level, string> = {
   ].join(' ')
 }
 
-export const systemPrompt = (language: Language, level: Level): string => {
-  const name = languageName(language)
+export const systemPrompt = (settings: UserSettings): string => {
+  const target = languageName(settings.targetLanguage)
+  const native = languageName(settings.nativeLanguage)
   return [
-    `You are a friendly and patient ${name} language tutor.`,
-    `The student is at CEFR level ${level}.`,
-    levelInstructions[level],
+    `You are a friendly and patient ${target} language tutor.`,
+    `The student's native language is ${native}.`,
+    `The student is at CEFR level ${settings.level}.`,
+    levelInstructions[settings.level],
     'Keep responses concise and conversational.',
-    `Respond in ${name}.`
+    `When the student seems confused, you may briefly clarify in ${native}.`,
+    `Otherwise, respond in ${target}.`
   ].join(' ')
 }

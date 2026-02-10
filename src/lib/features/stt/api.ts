@@ -1,9 +1,8 @@
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
-import { TranscribeError, TranscribePayload, TranscribeUrlParams } from './schema'
+import { TranscribeError, TranscribePayload } from './schema'
 
 const transcribe = HttpApiEndpoint.post('transcribe', '/api/stt')
   .setPayload(TranscribePayload)
-  .setUrlParams(TranscribeUrlParams)
   .addError(TranscribeError)
 
 export class SttGroup extends HttpApiGroup.make('stt').add(transcribe) {}

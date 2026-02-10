@@ -10,7 +10,3 @@ export class TranscribeError extends Schema.TaggedError<TranscribeError>()(
 export const TranscribePayload = HttpApiSchema.Uint8Array({
   contentType: 'application/octet-stream'
 })
-
-export const TranscribeUrlParams = Schema.Struct({
-  language: Schema.optionalWith(Schema.String, { default: () => 'en' })
-})

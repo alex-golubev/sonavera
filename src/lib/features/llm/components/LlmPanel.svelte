@@ -3,14 +3,10 @@
   import { Effect, Option, pipe } from 'effect'
   import * as llm from '../store'
   import * as tts from '$lib/features/tts/store'
-  import { language as languageAtom } from '$lib/features/language/store'
-  import { level as levelAtom } from '$lib/features/level/store'
   import TtsToggle from '$lib/features/tts/components/TtsToggle.svelte'
 
   const registry = getRegistry()
 
-  const language = useAtomValue(languageAtom)
-  const level = useAtomValue(levelAtom)
   const messages = useAtomValue(llm.messages)
   const responding = useAtomValue(llm.responding)
   const streamingText = useAtomValue(llm.streamingText)
@@ -24,7 +20,7 @@
     const trimmed = input.trim()
     input = ''
     Effect.runSync(tts.warmup(registry))
-    Effect.runSync(llm.send(registry, trimmed, { language: language(), level: level() }))
+    Effect.runSync(llm.send(registry, trimmed))
   }
 
   const handleKeydown = (e: KeyboardEvent) =>

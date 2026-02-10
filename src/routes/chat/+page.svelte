@@ -1,25 +1,22 @@
 <script lang="ts">
   import { useAtomValue, getRegistry } from '$lib/effect-atom'
   import { Effect, Option, pipe } from 'effect'
+  import { page } from '$app/state'
   import * as auth from '$lib/features/auth/store'
   import * as stt from '$lib/features/stt/store'
   import * as llm from '$lib/features/llm/store'
   import * as tts from '$lib/features/tts/store'
-  import { language as languageAtom } from '$lib/features/language/store'
-  import { level as levelAtom } from '$lib/features/level/store'
-  import { languageName } from '$lib/features/language/schema'
-  import LanguageSelector from '$lib/features/language/components/LanguageSelector.svelte'
-  import LevelSelector from '$lib/features/level/components/LevelSelector.svelte'
+  import { languageName, type Language } from '$lib/features/language/schema'
   import TtsToggle from '$lib/features/tts/components/TtsToggle.svelte'
 
   const registry = getRegistry()
 
   const handleSignOut = () => Effect.runPromise(auth.signOut(registry))
 
-  // --- Atoms ---
-  const language = useAtomValue(languageAtom)
-  const level = useAtomValue(levelAtom)
+  // --- User settings from server ---
+  const targetLanguage = (): Language => (page.data.user?.targetLanguage as Language) ?? 'es'
 
+  // --- Atoms ---
   const listening = useAtomValue(stt.listening)
   const speaking = useAtomValue(stt.speaking)
   const transcribing = useAtomValue(stt.transcribing)
@@ -42,7 +39,7 @@
   // --- Mic handler (user gesture — warmup TTS here for Safari) ---
   const handleMicClick = () => {
     Effect.runSync(tts.warmup(registry))
-    Effect.runPromise(stt.toggle(registry, language()))
+    Effect.runPromise(stt.toggle(registry))
   }
 
   // --- STT → LLM bridge ---
@@ -61,7 +58,7 @@
       Option.filter(() => !responding()),
       Option.match({
         onNone: () => {},
-        onSome: (text) => Effect.runSync(llm.send(registry, text, { language: language(), level: level() }))
+        onSome: (text) => Effect.runSync(llm.send(registry, text))
       })
     )
   })
@@ -127,13 +124,11 @@
         </div>
         <div>
           <p class="font-semibold text-gray-900">Emma</p>
-          <p class="text-sm text-gray-500">AI Tutor · {languageName(language())}</p>
+          <p class="text-sm text-gray-500">AI Tutor · {languageName(targetLanguage())}</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
-        <LanguageSelector />
-        <LevelSelector />
         <TtsToggle />
         <button
           type="button"

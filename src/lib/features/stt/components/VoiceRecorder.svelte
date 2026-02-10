@@ -2,10 +2,8 @@
   import { useAtomValue, getRegistry } from '$lib/effect-atom'
   import { Effect } from 'effect'
   import * as stt from '../store'
-  import { language as languageAtom } from '$lib/features/language/store'
 
   const registry = getRegistry()
-  const language = useAtomValue(languageAtom)
 
   const listening = useAtomValue(stt.listening)
   const speaking = useAtomValue(stt.speaking)
@@ -26,7 +24,7 @@
       type="button"
       aria-label={listening() ? 'Stop listening' : 'Start listening'}
       disabled={Boolean(initializing())}
-      onclick={() => Effect.runPromise(stt.toggle(registry, language()))}
+      onclick={() => Effect.runPromise(stt.toggle(registry))}
       class="relative flex h-14 w-14 cursor-pointer items-center justify-center rounded-full transition-all duration-200
         {listening()
         ? 'bg-linear-to-r from-red-500 to-fuchsia-600 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40'

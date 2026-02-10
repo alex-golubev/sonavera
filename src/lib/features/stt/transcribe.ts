@@ -3,15 +3,11 @@ import type { Registry } from '$lib/effect-atom'
 import { Effect, Fiber, Stream, pipe } from 'effect'
 import { error, fiberRef, text, transcribing } from './atoms'
 
-const transcribeEffect = (registry: Registry.Registry, audio: Uint8Array, language: string) =>
+const transcribeEffect = (registry: Registry.Registry, audio: Uint8Array) =>
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient
     const response = yield* client.execute(
-      pipe(
-        HttpClientRequest.post('/api/stt'),
-        HttpClientRequest.setUrlParam('language', language),
-        HttpClientRequest.bodyUint8Array(audio, 'application/octet-stream')
-      )
+      pipe(HttpClientRequest.post('/api/stt'), HttpClientRequest.bodyUint8Array(audio, 'application/octet-stream'))
     )
 
     yield* response.status >= 400
@@ -30,7 +26,7 @@ const transcribeEffect = (registry: Registry.Registry, audio: Uint8Array, langua
     Effect.ensuring(Effect.sync(() => registry.set(transcribing, false)))
   )
 
-export const consumeTranscription = (registry: Registry.Registry, audio: Uint8Array, language: string) => {
+export const consumeTranscription = (registry: Registry.Registry, audio: Uint8Array) => {
   const prev = registry.get(fiberRef)
   const fiber = Effect.runFork(
     pipe(
@@ -42,7 +38,7 @@ export const consumeTranscription = (registry: Registry.Registry, audio: Uint8Ar
           registry.set(error, '')
         })
       ),
-      Effect.andThen(transcribeEffect(registry, audio, language))
+      Effect.andThen(transcribeEffect(registry, audio))
     )
   )
   registry.set(fiberRef, fiber)

@@ -5,11 +5,11 @@ import { createVad, toggleVad } from './vad'
 
 export { listening, speaking, transcribing, text, error, ready, initializing } from './atoms'
 
-export const toggle = (registry: Registry.Registry, language: string) =>
+export const toggle = (registry: Registry.Registry) =>
   pipe(
     Effect.suspend(() => {
       const mic = registry.get(vadRef)
-      return mic ? toggleVad(registry, mic) : createVad(registry, language)
+      return mic ? toggleVad(registry, mic) : createVad(registry)
     }),
     Effect.tapError((err) => Effect.sync(() => registry.set(error, String(err)))),
     Effect.ignore

@@ -1,8 +1,6 @@
 import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform'
 import { Atom, type Registry } from '$lib/effect-atom'
 import { Effect, Fiber, Option, Stream, pipe } from 'effect'
-import type { Language } from '$lib/features/language/schema'
-import type { Level } from '$lib/features/level/schema'
 import { LlmError, type LlmMessage } from './schema'
 
 // --- State atoms ---
@@ -16,12 +14,12 @@ export const streamingText = Atom.make('')
 
 const fiberRef = Atom.keepAlive(Atom.make<Fiber.RuntimeFiber<void, unknown> | undefined>(undefined))
 
-const streamEffect = (registry: Registry.Registry, settings: { language: Language; level: Level }) =>
+const streamEffect = (registry: Registry.Registry) =>
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient
     const request = yield* pipe(
       HttpClientRequest.post('/api/llm'),
-      HttpClientRequest.bodyJson({ messages: [...registry.get(messages)], ...settings })
+      HttpClientRequest.bodyJson({ messages: [...registry.get(messages)] })
     )
     const response = yield* client.execute(request)
 
@@ -57,11 +55,7 @@ const streamEffect = (registry: Registry.Registry, settings: { language: Languag
 
 // --- Public API ---
 
-export const send = (
-  registry: Registry.Registry,
-  userMessage: string,
-  settings: { language: Language; level: Level }
-) =>
+export const send = (registry: Registry.Registry, userMessage: string) =>
   Effect.sync(() => {
     registry.set(messages, [...registry.get(messages), { role: 'user', content: userMessage }])
     const prev = registry.get(fiberRef)
@@ -75,7 +69,7 @@ export const send = (
             registry.set(error, '')
           })
         ),
-        Effect.andThen(streamEffect(registry, settings))
+        Effect.andThen(streamEffect(registry))
       )
     )
     registry.set(fiberRef, fiber)
