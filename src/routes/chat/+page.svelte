@@ -6,7 +6,7 @@
   import * as stt from '$lib/features/stt/store'
   import * as llm from '$lib/features/llm/store'
   import * as tts from '$lib/features/tts/store'
-  import { languageName, type Language } from '$lib/features/language/schema'
+  import { DEFAULT_TARGET_LANGUAGE, languageName, type Language } from '$lib/features/language/schema'
   import TtsToggle from '$lib/features/tts/components/TtsToggle.svelte'
 
   const registry = getRegistry()
@@ -14,7 +14,7 @@
   const handleSignOut = () => Effect.runPromise(auth.signOut(registry))
 
   // --- User settings from server ---
-  const targetLanguage = (): Language => (page.data.user?.targetLanguage as Language) ?? 'es'
+  const targetLanguage = (): Language => (page.data.user?.targetLanguage ?? DEFAULT_TARGET_LANGUAGE) as Language
 
   // --- Atoms ---
   const listening = useAtomValue(stt.listening)

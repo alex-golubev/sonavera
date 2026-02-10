@@ -2,6 +2,8 @@ import { betterAuth } from 'better-auth'
 import { effectSqlAdapter } from 'better-auth-effect'
 import { dbRuntime } from '$lib/server/database'
 import { env } from '$env/dynamic/private'
+import { DEFAULT_NATIVE_LANGUAGE, DEFAULT_TARGET_LANGUAGE } from '$lib/features/language/schema'
+import { DEFAULT_LEVEL } from '$lib/features/level/schema'
 
 const getBaseURL = (): string =>
   env.BETTER_AUTH_URL ?? (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : 'http://localhost:5173')
@@ -37,19 +39,19 @@ export const auth = betterAuth({
       nativeLanguage: {
         type: 'string',
         required: false,
-        defaultValue: 'en',
+        defaultValue: DEFAULT_NATIVE_LANGUAGE,
         input: true
       },
       targetLanguage: {
         type: 'string',
         required: false,
-        defaultValue: 'es',
+        defaultValue: DEFAULT_TARGET_LANGUAGE,
         input: true
       },
       level: {
         type: 'string',
         required: false,
-        defaultValue: 'A1',
+        defaultValue: DEFAULT_LEVEL,
         input: true
       }
     }

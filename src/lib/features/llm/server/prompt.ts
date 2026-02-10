@@ -1,5 +1,5 @@
 import { languageName } from '$lib/features/language/schema'
-import type { UserSettings } from '$lib/server/user-settings'
+import type { UserSettingsValue } from '$lib/server/user-settings'
 import type { Level } from '$lib/features/level/schema'
 
 const levelInstructions: Record<Level, string> = {
@@ -45,7 +45,7 @@ const levelInstructions: Record<Level, string> = {
   ].join(' ')
 }
 
-export const systemPrompt = (settings: UserSettings): string => {
+export const systemPrompt = (settings: UserSettingsValue): string => {
   const target = languageName(settings.targetLanguage)
   const native = languageName(settings.nativeLanguage)
   return [

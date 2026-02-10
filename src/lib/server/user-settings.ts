@@ -1,26 +1,21 @@
-import { HttpServerRequest } from '@effect/platform'
-import { Effect, Schema, pipe } from 'effect'
-import { Language } from '$lib/features/language/schema'
-import { Level } from '$lib/features/level/schema'
+import { Context, Layer } from 'effect'
+import { DEFAULT_NATIVE_LANGUAGE, DEFAULT_TARGET_LANGUAGE, type Language } from '$lib/features/language/schema'
+import { DEFAULT_LEVEL, type Level } from '$lib/features/level/schema'
+import type { auth } from '$lib/server/auth'
 
-export interface UserSettings {
+export interface UserSettingsValue {
   readonly nativeLanguage: Language
   readonly targetLanguage: Language
   readonly level: Level
 }
 
-const UserSettingsHeaders = Schema.Struct({
-  'x-user-native-language': Language,
-  'x-user-target-language': Language,
-  'x-user-level': Level
-})
+export class UserSettings extends Context.Tag('UserSettings')<UserSettings, UserSettingsValue>() {}
 
-export const userSettings: Effect.Effect<UserSettings, never, HttpServerRequest.HttpServerRequest> = pipe(
-  HttpServerRequest.schemaHeaders(UserSettingsHeaders),
-  Effect.map((h) => ({
-    nativeLanguage: h['x-user-native-language'],
-    targetLanguage: h['x-user-target-language'],
-    level: h['x-user-level']
-  })),
-  Effect.orDie
-)
+type AuthUser = typeof auth.$Infer.Session.user
+
+export const userSettingsLayer = (user: AuthUser): Layer.Layer<UserSettings> =>
+  Layer.succeed(UserSettings, {
+    nativeLanguage: (user.nativeLanguage ?? DEFAULT_NATIVE_LANGUAGE) as Language,
+    targetLanguage: (user.targetLanguage ?? DEFAULT_TARGET_LANGUAGE) as Language,
+    level: (user.level ?? DEFAULT_LEVEL) as Level
+  })

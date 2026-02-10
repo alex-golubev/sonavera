@@ -1,17 +1,11 @@
-import { HttpApiBuilder, HttpServerResponse } from '@effect/platform'
-import { Effect, Layer, pipe } from 'effect'
-import { TtsApi } from '../api'
-import { OpenAiTts, OpenAiTtsLive } from './openai'
+import { Effect } from 'effect'
+import { OpenAiTts } from './openai'
+import type { TtsVoice } from '../schema'
 
-const TtsHandlers = HttpApiBuilder.group(TtsApi, 'tts', (handlers) =>
-  handlers.handle('speak', ({ payload }) =>
-    Effect.gen(function* () {
-      const tts = yield* OpenAiTts
-      return HttpServerResponse.stream(tts.speakStream(payload.text, payload.voice), {
-        contentType: 'application/octet-stream'
-      })
-    })
-  )
-)
+export { OpenAiTtsLive } from './openai'
 
-export const TtsLive = pipe(TtsHandlers, Layer.provide(OpenAiTtsLive))
+export const speak = (text: string, voice: TtsVoice) =>
+  Effect.gen(function* () {
+    const tts = yield* OpenAiTts
+    return tts.speakStream(text, voice)
+  })

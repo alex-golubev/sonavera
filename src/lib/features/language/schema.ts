@@ -21,4 +21,7 @@ export const languages: ReadonlyArray<{
   { code: 'he', name: 'Hebrew', nativeName: 'עברית' }
 ]
 
+export const DEFAULT_NATIVE_LANGUAGE: Language = 'en'
+export const DEFAULT_TARGET_LANGUAGE: Language = 'es'
+
 export const languageName = (code: Language): string => languages.find((l) => l.code === code)?.name ?? code

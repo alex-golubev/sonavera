@@ -1,8 +1,22 @@
 import type { RequestHandler } from './$types'
-import { ttsHandler } from '$lib/server/composition'
-import { enrichRequest } from '$lib/server/enrich-request'
+import { Effect, Schema, Stream, pipe } from 'effect'
+import { speak, OpenAiTtsLive } from '$lib/features/tts/server/handler'
+import { TtsPayload } from '$lib/features/tts/schema'
 
 export const POST: RequestHandler = ({ request, locals }) =>
   locals.session && locals.user
-    ? ttsHandler(enrichRequest(request, locals.user))
+    ? pipe(
+        Effect.tryPromise(() => request.json()),
+        Effect.flatMap(Schema.decodeUnknown(TtsPayload)),
+        Effect.flatMap((payload) => speak(payload.text, payload.voice)),
+        Effect.map(
+          (stream) =>
+            new Response(Stream.toReadableStream(stream), {
+              headers: { 'Content-Type': 'application/octet-stream' }
+            })
+        ),
+        Effect.catchAll(() => Effect.succeed(new Response('Bad Request', { status: 400 }))),
+        Effect.provide(OpenAiTtsLive),
+        Effect.runPromise
+      )
     : new Response('Unauthorized', { status: 401 })

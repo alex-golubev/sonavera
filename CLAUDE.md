@@ -25,21 +25,30 @@ Run a single test file: `pnpm vitest run src/path/to/file.spec.ts`
 - **Deployment**: Vercel via `@sveltejs/adapter-vercel`
 - **Package Manager**: pnpm (engine-strict mode enabled)
 - **State Management**: Custom `@effect-atom` Svelte 5 adapter in `src/lib/effect-atom/`
-- **HTTP API**: `@effect/platform` HttpApi with per-feature endpoints (`/api/stt`, `/api/llm`, `/api/tts`)
+- **HTTP API**: Direct Effect execution in SvelteKit routes with per-feature endpoints (`/api/stt`, `/api/llm`, `/api/tts`)
 - **RPC**: `@effect/rpc` with MsgPack serialization over HTTP (`/api/rpc`) — available for future features
 - **Auth**: Better Auth with `better-auth-effect` adapter for `@effect/sql-pg`
 - **Environment**: Requires `OPENAI_API_KEY`, `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (see `.env.example`); use `$env/dynamic/private` for runtime secrets
 
 ### HTTP API Communication
 
-Client-server communication uses `@effect/platform` HttpApi with per-feature POST endpoints:
+Client-server communication uses direct Effect execution in SvelteKit routes with per-feature POST endpoints:
 
-- **API definition** (`src/lib/features/<name>/api.ts`): `HttpApiEndpoint` + `HttpApiGroup` + `HttpApi` defining typed endpoints with schemas and errors
-- **Server handler** (`src/lib/features/<name>/server/handler.ts`): `HttpApiBuilder.group` implementing endpoint handlers, exported as `FeatureLive` layer
-- **Composition** (`src/lib/server/composition.ts`): per-feature `HttpApiBuilder.api` + `HttpApiBuilder.toWebHandler` producing named handlers
-- **Routes** (`src/routes/api/<name>/+server.ts`): SvelteKit POST handler delegating `request` to the composed handler
+- **Handler** (`src/lib/features/<name>/server/handler.ts`): plain Effect function taking parsed payload, yielding services from context (`UserSettings`, `OpenAiStt`, etc.), returning `Stream<Uint8Array>`
+- **Service** (`src/lib/features/<name>/server/openai.ts`): `Context.Tag` service with `*Live` layer (e.g. `OpenAiSttLive`) wrapping the OpenAI SDK
+- **Route** (`src/routes/api/<name>/+server.ts`): SvelteKit POST handler that parses request, validates with `Schema.decodeUnknown`, calls handler, converts `Stream.toReadableStream()`, provides layers via `Effect.provide(Layer.merge(...))`, runs via `Effect.runPromise`
 
-Each feature defines its own `HttpApi` and is composed independently. Streaming responses use `HttpServerResponse.stream` with binary (`application/octet-stream`) or text (`text/plain`) content types.
+Streaming responses use `Stream.toReadableStream()` with binary (`application/octet-stream`) or text (`text/plain`) content types.
+
+### User Settings
+
+Per-user settings (`nativeLanguage`, `targetLanguage`, `level`) are injected into Effect handlers via `Context.Tag`:
+
+- **Tag** (`src/lib/server/user-settings.ts`): `UserSettings` Context.Tag with `UserSettingsValue` interface
+- **Layer factory**: `userSettingsLayer(locals.user)` creates `Layer.Layer<UserSettings>` from the authenticated user
+- **In routes**: provided alongside service layers via `Layer.merge(ServiceLive, userSettingsLayer(locals.user))`
+- **In handlers**: accessed via `yield* UserSettings`
+- **Defaults**: centralized in schema files (`DEFAULT_NATIVE_LANGUAGE`, `DEFAULT_TARGET_LANGUAGE`, `DEFAULT_LEVEL`)
 
 ### RPC Communication
 
@@ -68,19 +77,18 @@ All hooks return **getter functions** (not raw values) — call `count()` not `c
 
 Features live in `src/lib/features/<name>/` with co-located code:
 
-- `api.ts` — HttpApi endpoint, group, and API definition (schemas, errors)
 - `store.ts` — atoms and business logic (client-side)
 - `schema.ts` — shared types, payloads, and tagged errors
-- `server/` — server-side handlers and service implementations
+- `server/handler.ts` — plain Effect function (handler)
+- `server/openai.ts` — `Context.Tag` service + `*Live` layer
 - `components/` — Svelte components
 
 To wire up a new feature:
 
-1. Define payload and error schemas in `schema.ts` (use `Schema.TaggedError` with `HttpApiSchema.annotations`)
-2. Define `HttpApiEndpoint`, `HttpApiGroup`, and `HttpApi` in `api.ts`
-3. Create server handler in `server/handler.ts` using `HttpApiBuilder.group`, export as `FeatureLive` layer
-4. Add handler composition in `src/lib/server/composition.ts`: `HttpApiBuilder.api(FeatureApi).pipe(Layer.provide(FeatureLive))` + `HttpApiBuilder.toWebHandler`
-5. Create SvelteKit route at `src/routes/api/<name>/+server.ts` delegating to the composed handler
+1. Define payload and error schemas in `schema.ts` (use `Schema.TaggedError`)
+2. Create service in `server/openai.ts` as `Context.Tag` with `Layer.effect` implementation
+3. Create handler in `server/handler.ts` — plain Effect function that yields services and returns a `Stream`
+4. Create SvelteKit route at `src/routes/api/<name>/+server.ts` that parses request, calls handler, provides layers, and runs via `Effect.runPromise`
 
 ### Authentication
 

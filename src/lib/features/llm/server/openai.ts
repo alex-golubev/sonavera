@@ -1,7 +1,7 @@
 import { Context, Effect, Layer, Option, Stream, pipe } from 'effect'
 import { OpenAiClient, OpenAiClientLive } from '$lib/server/openai'
 import { LlmError, type LlmMessage } from '../schema'
-import type { UserSettings } from '$lib/server/user-settings'
+import type { UserSettingsValue } from '$lib/server/user-settings'
 import { systemPrompt } from './prompt'
 
 const toLlmError = (error: unknown) => new LlmError({ message: String(error) })
@@ -9,7 +9,10 @@ const toLlmError = (error: unknown) => new LlmError({ message: String(error) })
 export class OpenAiLlm extends Context.Tag('OpenAiLlm')<
   OpenAiLlm,
   {
-    readonly llmStream: (messages: ReadonlyArray<LlmMessage>, settings: UserSettings) => Stream.Stream<string, LlmError>
+    readonly llmStream: (
+      messages: ReadonlyArray<LlmMessage>,
+      settings: UserSettingsValue
+    ) => Stream.Stream<string, LlmError>
   }
 >() {}
 
