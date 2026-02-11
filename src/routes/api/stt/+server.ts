@@ -15,6 +15,8 @@ export const POST: RequestHandler = ({ request, locals }) =>
               headers: { 'Content-Type': 'text/plain; charset=utf-8' }
             })
         ),
+        Effect.tapError((e) => Effect.sync(() => Effect.logError('[STT]', e))),
+        Effect.catchAll(() => Effect.succeed(new Response('Bad Request', { status: 400 }))),
         Effect.provide(Layer.merge(OpenAiSttLive, userSettingsLayer(locals.user))),
         Effect.runPromise
       )

@@ -1,5 +1,6 @@
 import { HttpClient, HttpClientRequest } from '@effect/platform'
 import { Atom, type Registry } from '$lib/effect-atom'
+import { withStallTimeout } from '$lib/http'
 import { clientRuntime } from '$lib/runtime'
 import { Effect, Fiber, Option, Stream, pipe } from 'effect'
 import { LlmError, type LlmMessage } from './schema'
@@ -30,7 +31,7 @@ const streamEffect = (registry: Registry.Registry) =>
           return yield* Effect.fail(new LlmError({ message: msg }))
         })
       : pipe(
-          response.stream,
+          withStallTimeout(response.stream),
           Stream.decodeText(),
           Stream.runForEach((delta) =>
             Effect.sync(() => registry.set(streamingText, registry.get(streamingText) + delta))

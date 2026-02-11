@@ -1,5 +1,6 @@
 import { HttpClient, HttpClientRequest } from '@effect/platform'
 import type { Registry } from '$lib/effect-atom'
+import { withStallTimeout } from '$lib/http'
 import { clientRuntime } from '$lib/runtime'
 import { Effect, Fiber, Stream, pipe } from 'effect'
 import { error, fiberRef, text, transcribing } from './atoms'
@@ -17,7 +18,7 @@ const transcribeEffect = (registry: Registry.Registry, audio: Uint8Array) =>
           registry.set(error, msg)
         })
       : pipe(
-          response.stream,
+          withStallTimeout(response.stream),
           Stream.decodeText(),
           Stream.runForEach((delta) => Effect.sync(() => registry.set(text, registry.get(text) + delta)))
         )

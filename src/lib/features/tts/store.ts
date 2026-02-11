@@ -1,5 +1,6 @@
 import { HttpClient, HttpClientRequest } from '@effect/platform'
 import { Atom, type Registry } from '$lib/effect-atom'
+import { withStallTimeout } from '$lib/http'
 import { clientRuntime } from '$lib/runtime'
 import { Effect, Fiber, Option, Stream, pipe } from 'effect'
 import { type PCMPlayer, createPlayer, pcmConfig } from './pcm-player'
@@ -66,7 +67,7 @@ const streamEffect = (registry: Registry.Registry, text: string, voice: TtsVoice
           return yield* Effect.fail(new TtsError({ message: msg }))
         })
       : pipe(
-          response.stream,
+          withStallTimeout(response.stream),
           Stream.mapEffect((chunk) =>
             Effect.sync(() => {
               player.playChunk(chunk)

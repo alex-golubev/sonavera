@@ -15,6 +15,7 @@ export const POST: RequestHandler = ({ request, locals }) =>
               headers: { 'Content-Type': 'application/octet-stream' }
             })
         ),
+        Effect.tapError((e) => Effect.sync(() => Effect.logError('[TTS]', e))),
         Effect.catchAll(() => Effect.succeed(new Response('Bad Request', { status: 400 }))),
         Effect.provide(OpenAiTtsLive),
         Effect.runPromise
