@@ -40,6 +40,7 @@ const startVad = (registry: Registry.Registry, mic: MicVAD) =>
 const initVad = (registry: Registry.Registry) =>
   Effect.gen(function* () {
     registry.set(initializing, true)
+    registry.set(error, '')
 
     const mic = yield* Effect.tryPromise({
       try: () =>
@@ -58,10 +59,13 @@ const initVad = (registry: Registry.Registry) =>
       catch: String
     })
 
+    yield* pipe(
+      Effect.tryPromise({ try: () => mic.start(), catch: String }),
+      Effect.tapError(() => Effect.sync(() => mic.destroy()))
+    )
+
     registry.set(vadRef, mic)
     registry.set(ready, true)
-
-    yield* Effect.tryPromise({ try: () => mic.start(), catch: String })
     registry.set(listening, true)
   }).pipe(
     Effect.tapError((err) => Effect.sync(() => registry.set(error, err))),
