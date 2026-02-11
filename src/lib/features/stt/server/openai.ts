@@ -7,7 +7,13 @@ const toTranscribeError = (error: unknown) => new TranscribeError({ message: Str
 
 export class OpenAiStt extends Context.Tag('OpenAiStt')<
   OpenAiStt,
-  { readonly transcribeStream: (audio: Uint8Array, language: string) => Stream.Stream<string, TranscribeError> }
+  {
+    readonly transcribeStream: (
+      audio: Uint8Array,
+      language: string,
+      signal?: AbortSignal
+    ) => Stream.Stream<string, TranscribeError>
+  }
 >() {}
 
 export const OpenAiSttLive = Layer.effect(
@@ -16,16 +22,19 @@ export const OpenAiSttLive = Layer.effect(
     const client = yield* OpenAiClient
 
     return OpenAiStt.of({
-      transcribeStream: (audio, language) =>
+      transcribeStream: (audio, language, signal) =>
         pipe(
           Effect.tryPromise({
             try: () =>
-              client.audio.transcriptions.create({
-                model: 'gpt-4o-mini-transcribe',
-                file: new File([audio as BlobPart], 'audio.wav', { type: 'audio/wav' }),
-                language,
-                stream: true
-              }),
+              client.audio.transcriptions.create(
+                {
+                  model: 'gpt-4o-mini-transcribe',
+                  file: new File([audio as BlobPart], 'audio.wav', { type: 'audio/wav' }),
+                  language,
+                  stream: true
+                },
+                { signal }
+              ),
             catch: toTranscribeError
           }),
           Effect.map((response) => Stream.fromAsyncIterable(response, toTranscribeError)),

@@ -7,12 +7,12 @@ export { OpenAiLlmLive } from './openai'
 
 const encoder = new TextEncoder()
 
-export const chat = (messages: ReadonlyArray<LlmMessage>) =>
+export const chat = (messages: ReadonlyArray<LlmMessage>, signal?: AbortSignal) =>
   Effect.gen(function* () {
     const settings = yield* UserSettings
     const llm = yield* OpenAiLlm
     return pipe(
-      llm.llmStream(messages, settings),
+      llm.llmStream(messages, settings, signal),
       Stream.map((delta) => encoder.encode(delta))
     )
   })

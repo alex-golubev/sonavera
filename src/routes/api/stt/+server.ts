@@ -1,6 +1,7 @@
 import type { RequestHandler } from './$types'
 import { Effect, Layer, Stream, pipe } from 'effect'
 import { transcribe, OpenAiSttLive } from '$lib/features/stt/server/handler'
+import { fromAbortSignal } from '$lib/http'
 import { userSettingsLayer } from '$lib/server/user-settings'
 
 export const POST: RequestHandler = ({ request, locals }) =>
@@ -8,10 +9,10 @@ export const POST: RequestHandler = ({ request, locals }) =>
     ? pipe(
         Effect.tryPromise(() => request.arrayBuffer()),
         Effect.map((buf) => new Uint8Array(buf)),
-        Effect.flatMap(transcribe),
+        Effect.flatMap((payload) => transcribe(payload, request.signal)),
         Effect.map(
           (stream) =>
-            new Response(Stream.toReadableStream(stream), {
+            new Response(Stream.toReadableStream(Stream.interruptWhen(stream, fromAbortSignal(request.signal))), {
               headers: { 'Content-Type': 'text/plain; charset=utf-8' }
             })
         ),

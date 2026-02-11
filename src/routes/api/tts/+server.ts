@@ -2,16 +2,17 @@ import type { RequestHandler } from './$types'
 import { Effect, Schema, Stream, pipe } from 'effect'
 import { speak, OpenAiTtsLive } from '$lib/features/tts/server/handler'
 import { TtsPayload } from '$lib/features/tts/schema'
+import { fromAbortSignal } from '$lib/http'
 
 export const POST: RequestHandler = ({ request, locals }) =>
   locals.session && locals.user
     ? pipe(
         Effect.tryPromise(() => request.json()),
         Effect.flatMap(Schema.decodeUnknown(TtsPayload)),
-        Effect.flatMap((payload) => speak(payload.text, payload.voice)),
+        Effect.flatMap((payload) => speak(payload.text, payload.voice, request.signal)),
         Effect.map(
           (stream) =>
-            new Response(Stream.toReadableStream(stream), {
+            new Response(Stream.toReadableStream(Stream.interruptWhen(stream, fromAbortSignal(request.signal))), {
               headers: { 'Content-Type': 'application/octet-stream' }
             })
         ),

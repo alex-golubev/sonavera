@@ -14,7 +14,9 @@ const bodyToStream = (body: ReadableStream | null) =>
 
 export class OpenAiTts extends Context.Tag('OpenAiTts')<
   OpenAiTts,
-  { readonly speakStream: (text: string, voice: TtsVoice) => Stream.Stream<Uint8Array, TtsError> }
+  {
+    readonly speakStream: (text: string, voice: TtsVoice, signal?: AbortSignal) => Stream.Stream<Uint8Array, TtsError>
+  }
 >() {}
 
 export const OpenAiTtsLive = Layer.effect(
@@ -23,17 +25,20 @@ export const OpenAiTtsLive = Layer.effect(
     const client = yield* OpenAiClient
 
     return OpenAiTts.of({
-      speakStream: (text, voice) =>
+      speakStream: (text, voice, signal) =>
         pipe(
           Effect.tryPromise({
             try: () =>
-              client.audio.speech.create({
-                model: 'gpt-4o-mini-tts',
-                voice,
-                input: text,
-                instructions: VOICE_INSTRUCTIONS,
-                response_format: 'pcm'
-              }),
+              client.audio.speech.create(
+                {
+                  model: 'gpt-4o-mini-tts',
+                  voice,
+                  input: text,
+                  instructions: VOICE_INSTRUCTIONS,
+                  response_format: 'pcm'
+                },
+                { signal }
+              ),
             catch: toTtsError
           }),
           Effect.map((response) => bodyToStream(response.body)),

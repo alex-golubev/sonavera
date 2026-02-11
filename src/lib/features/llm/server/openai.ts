@@ -11,7 +11,8 @@ export class OpenAiLlm extends Context.Tag('OpenAiLlm')<
   {
     readonly llmStream: (
       messages: ReadonlyArray<LlmMessage>,
-      settings: UserSettingsValue
+      settings: UserSettingsValue,
+      signal?: AbortSignal
     ) => Stream.Stream<string, LlmError>
   }
 >() {}
@@ -22,18 +23,21 @@ export const OpenAiLlmLive = Layer.effect(
     const client = yield* OpenAiClient
 
     return OpenAiLlm.of({
-      llmStream: (messages, settings) =>
+      llmStream: (messages, settings, signal) =>
         pipe(
           Effect.tryPromise({
             try: () =>
-              client.chat.completions.create({
-                model: 'gpt-4.1-mini',
-                stream: true,
-                messages: [
-                  { role: 'developer', content: systemPrompt(settings) },
-                  ...messages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
-                ]
-              }),
+              client.chat.completions.create(
+                {
+                  model: 'gpt-4.1-mini',
+                  stream: true,
+                  messages: [
+                    { role: 'developer', content: systemPrompt(settings) },
+                    ...messages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+                  ]
+                },
+                { signal }
+              ),
             catch: toLlmError
           }),
           Effect.map((response) => Stream.fromAsyncIterable(response, toLlmError)),
