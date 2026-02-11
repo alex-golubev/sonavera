@@ -5,6 +5,8 @@ import { clientRuntime } from '$lib/runtime'
 import { Effect, Fiber, Option, Stream, pipe } from 'effect'
 import { LlmError, type LlmMessage } from './schema'
 
+const MAX_CONTEXT_MESSAGES = 20
+
 // --- State atoms ---
 
 export const messages = Atom.make<ReadonlyArray<LlmMessage>>([])
@@ -21,7 +23,7 @@ const streamEffect = (registry: Registry.Registry) =>
     const client = yield* HttpClient.HttpClient
     const request = yield* pipe(
       HttpClientRequest.post('/api/llm'),
-      HttpClientRequest.bodyJson({ messages: [...registry.get(messages)] })
+      HttpClientRequest.bodyJson({ messages: [...registry.get(messages).slice(-MAX_CONTEXT_MESSAGES)] })
     )
     const response = yield* client.execute(request)
 
