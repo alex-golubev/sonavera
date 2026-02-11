@@ -1,5 +1,6 @@
-import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform'
+import { HttpClient, HttpClientRequest } from '@effect/platform'
 import type { Registry } from '$lib/effect-atom'
+import { clientRuntime } from '$lib/runtime'
 import { Effect, Fiber, Stream, pipe } from 'effect'
 import { error, fiberRef, text, transcribing } from './atoms'
 
@@ -21,14 +22,13 @@ const transcribeEffect = (registry: Registry.Registry, audio: Uint8Array) =>
           Stream.runForEach((delta) => Effect.sync(() => registry.set(text, registry.get(text) + delta)))
         )
   }).pipe(
-    Effect.provide(FetchHttpClient.layer),
     Effect.catchAll((err) => Effect.sync(() => registry.set(error, String(err)))),
     Effect.ensuring(Effect.sync(() => registry.set(transcribing, false)))
   )
 
 export const consumeTranscription = (registry: Registry.Registry, audio: Uint8Array) => {
   const prev = registry.get(fiberRef)
-  const fiber = Effect.runFork(
+  const fiber = clientRuntime.runFork(
     pipe(
       prev ? Fiber.interrupt(prev) : Effect.void,
       Effect.andThen(

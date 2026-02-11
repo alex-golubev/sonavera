@@ -1,5 +1,6 @@
-import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform'
+import { HttpClient, HttpClientRequest } from '@effect/platform'
 import { Atom, type Registry } from '$lib/effect-atom'
+import { clientRuntime } from '$lib/runtime'
 import { Effect, Fiber, Option, Stream, pipe } from 'effect'
 import { LlmError, type LlmMessage } from './schema'
 
@@ -44,7 +45,6 @@ const streamEffect = (registry: Registry.Registry) =>
           )
         )
   }).pipe(
-    Effect.provide(FetchHttpClient.layer),
     Effect.catchAll((err) =>
       Effect.sync(() => {
         registry.set(responding, false)
@@ -59,7 +59,7 @@ export const send = (registry: Registry.Registry, userMessage: string) =>
   Effect.sync(() => {
     registry.set(messages, [...registry.get(messages), { role: 'user', content: userMessage }])
     const prev = registry.get(fiberRef)
-    const fiber = Effect.runFork(
+    const fiber = clientRuntime.runFork(
       pipe(
         prev ? Fiber.interrupt(prev) : Effect.void,
         Effect.andThen(

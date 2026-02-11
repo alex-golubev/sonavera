@@ -1,5 +1,6 @@
-import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform'
+import { HttpClient, HttpClientRequest } from '@effect/platform'
 import { Atom, type Registry } from '$lib/effect-atom'
+import { clientRuntime } from '$lib/runtime'
 import { Effect, Fiber, Option, Stream, pipe } from 'effect'
 import { type PCMPlayer, createPlayer, pcmConfig } from './pcm-player'
 import { TtsError, type TtsVoice } from './schema'
@@ -83,14 +84,11 @@ const streamEffect = (registry: Registry.Registry, text: string, voice: TtsVoice
           Stream.runDrain,
           Effect.andThen(Effect.sync(() => player.finish(() => registry.set(playing, false))))
         )
-  }).pipe(
-    Effect.provide(FetchHttpClient.layer),
-    Effect.catchAll((err) => Effect.sync(() => setError(registry, String(err))))
-  )
+  }).pipe(Effect.catchAll((err) => Effect.sync(() => setError(registry, String(err)))))
 
 const consumeTts = (registry: Registry.Registry, text: string, voice: TtsVoice) => {
   const prev = registry.get(fiberRef)
-  const fiber = Effect.runFork(
+  const fiber = clientRuntime.runFork(
     pipe(
       prev ? Fiber.interrupt(prev) : Effect.void,
       Effect.andThen(
