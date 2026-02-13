@@ -153,11 +153,14 @@ export const sendText = (registry: Registry.Registry, text: string) => {
   startPipeline(registry, new ConversationTextInput({ text }))
 }
 
-export const toggle = (registry: Registry.Registry) =>
-  Effect.gen(function* () {
-    const mic = registry.get(vadRef)
-    yield* mic ? toggleVad(registry, mic) : createVad(registry)
-  }).pipe(Effect.runPromise)
+export const toggle = (registry: Registry.Registry) => {
+  clientRuntime.runFork(
+    Effect.gen(function* () {
+      const mic = registry.get(vadRef)
+      yield* mic ? toggleVad(registry, mic) : createVad(registry)
+    }).pipe(Effect.catchAll((err) => Effect.sync(() => registry.set(error, String(err)))))
+  )
+}
 
 export const warmup = (registry: Registry.Registry) =>
   Effect.sync(() => {
