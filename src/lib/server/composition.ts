@@ -3,9 +3,9 @@ import { RpcSerialization, RpcServer } from '@effect/rpc'
 import { Effect, Layer } from 'effect'
 import { RootRpc } from '$lib/rpc/rpc'
 import { ConversationRpc } from '$lib/features/conversation/server/rpc'
-import { Stt } from '$lib/features/conversation/server/stt'
-import { Llm } from '$lib/features/conversation/server/llm'
-import { Tts } from '$lib/features/conversation/server/tts'
+import { STT } from '$lib/features/conversation/server/stt'
+import { LLM } from '$lib/features/conversation/server/llm'
+import { TTS } from '$lib/features/conversation/server/tts'
 import { OpenAiSttLive } from '$lib/features/conversation/server/openai/stt'
 import { OpenAiLlmLive } from '$lib/features/conversation/server/openai/llm'
 import { OpenAiTtsLive } from '$lib/features/conversation/server/openai/tts'
@@ -15,9 +15,9 @@ import { conversationHandler } from '$lib/features/conversation/server/handler'
 
 const ConversationHandlers = ConversationRpc.toLayer(
   Effect.gen(function* () {
-    const stt = yield* Stt
-    const llm = yield* Llm
-    const tts = yield* Tts
+    const stt = yield* STT
+    const llm = yield* LLM
+    const tts = yield* TTS
 
     return {
       conversationStream: conversationHandler(stt, llm, tts)

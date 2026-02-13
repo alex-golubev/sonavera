@@ -1,8 +1,8 @@
 import { Context, Stream } from 'effect'
 import { ConversationError } from '../schema'
 
-export class Tts extends Context.Tag('Tts')<
-  Tts,
+export class TTS extends Context.Tag('TTS')<
+  TTS,
   {
     readonly speakStream: (
       text: string,

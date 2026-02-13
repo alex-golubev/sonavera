@@ -3,9 +3,9 @@ import type { Headers } from '@effect/platform/Headers'
 import { DEFAULT_NATIVE_LANGUAGE, DEFAULT_TARGET_LANGUAGE, type Language } from '$lib/features/language/schema'
 import { DEFAULT_LEVEL, type Level } from '$lib/features/level/schema'
 import type { UserSettingsValue } from '$lib/server/user-settings'
-import type { Stt } from './stt'
-import type { Llm } from './llm'
-import type { Tts } from './tts'
+import type { STT } from './stt'
+import type { LLM } from './llm'
+import type { TTS } from './tts'
 import {
   ConversationAudioChunk,
   ConversationDone,
@@ -30,7 +30,7 @@ const parseUserSettings = (headers: Headers): UserSettingsValue => {
 const MAX_CONTEXT_MESSAGES = 20
 
 export const conversationHandler =
-  (stt: Stt['Type'], llm: Llm['Type'], tts: Tts['Type']) =>
+  (stt: STT['Type'], llm: LLM['Type'], tts: TTS['Type']) =>
   (
     payload: ConversationPayload,
     options: { readonly clientId: number; readonly headers: Headers }
@@ -65,8 +65,8 @@ const buildEventStream = (
   payload: ConversationPayload,
   userText: string,
   settings: UserSettingsValue,
-  llm: Llm['Type'],
-  tts: Tts['Type']
+  llm: LLM['Type'],
+  tts: TTS['Type']
 ) =>
   Effect.gen(function* () {
     const messages = [...payload.messages.slice(-MAX_CONTEXT_MESSAGES), { role: 'user' as const, content: userText }]

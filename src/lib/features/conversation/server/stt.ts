@@ -1,8 +1,8 @@
 import { Context, Stream } from 'effect'
 import { ConversationError } from '../schema'
 
-export class Stt extends Context.Tag('Stt')<
-  Stt,
+export class STT extends Context.Tag('STT')<
+  STT,
   {
     readonly transcribeStream: (
       audio: Uint8Array,
