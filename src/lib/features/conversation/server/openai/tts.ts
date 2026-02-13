@@ -1,30 +1,24 @@
 import { Readable } from 'node:stream'
-import { Context, Effect, Layer, Stream, pipe } from 'effect'
+import { Effect, Layer, Stream, pipe } from 'effect'
 import { OpenAiClient, OpenAiClientLive } from '$lib/server/openai'
-import { TtsError, type TtsVoice } from '../schema'
+import { ConversationError } from '../../schema'
+import { Tts } from '../tts'
 
 const VOICE_INSTRUCTIONS = 'Speak clearly at a natural pace, suitable for language learners.'
 
-const toTtsError = (error: unknown) => new TtsError({ message: String(error) })
+const toTtsError = (error: unknown) => new ConversationError({ message: String(error), phase: 'tts' })
 
 const bodyToStream = (body: ReadableStream | null) =>
   body
     ? Stream.fromAsyncIterable(Readable.fromWeb(body as import('node:stream/web').ReadableStream), toTtsError)
-    : Stream.fail(new TtsError({ message: 'Response body is null' }))
-
-export class OpenAiTts extends Context.Tag('OpenAiTts')<
-  OpenAiTts,
-  {
-    readonly speakStream: (text: string, voice: TtsVoice, signal?: AbortSignal) => Stream.Stream<Uint8Array, TtsError>
-  }
->() {}
+    : Stream.fail(new ConversationError({ message: 'Response body is null', phase: 'tts' }))
 
 export const OpenAiTtsLive = Layer.effect(
-  OpenAiTts,
+  Tts,
   Effect.gen(function* () {
     const client = yield* OpenAiClient
 
-    return OpenAiTts.of({
+    return Tts.of({
       speakStream: (text, voice, signal) =>
         pipe(
           Effect.tryPromise({
@@ -32,7 +26,7 @@ export const OpenAiTtsLive = Layer.effect(
               client.audio.speech.create(
                 {
                   model: 'gpt-4o-mini-tts',
-                  voice,
+                  voice: voice,
                   input: text,
                   instructions: VOICE_INSTRUCTIONS,
                   response_format: 'pcm'

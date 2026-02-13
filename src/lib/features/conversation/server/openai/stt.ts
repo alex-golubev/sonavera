@@ -1,27 +1,17 @@
-import { Context, Effect, Layer, Stream, pipe } from 'effect'
+import { Effect, Layer, Stream, pipe } from 'effect'
 import type OpenAI from 'openai'
 import { OpenAiClient, OpenAiClientLive } from '$lib/server/openai'
-import { TranscribeError } from '../schema'
+import { ConversationError } from '../../schema'
+import { Stt } from '../stt'
 
-const toTranscribeError = (error: unknown) => new TranscribeError({ message: String(error) })
-
-export class OpenAiStt extends Context.Tag('OpenAiStt')<
-  OpenAiStt,
-  {
-    readonly transcribeStream: (
-      audio: Uint8Array,
-      language: string,
-      signal?: AbortSignal
-    ) => Stream.Stream<string, TranscribeError>
-  }
->() {}
+const toSttError = (error: unknown) => new ConversationError({ message: String(error), phase: 'stt' })
 
 export const OpenAiSttLive = Layer.effect(
-  OpenAiStt,
+  Stt,
   Effect.gen(function* () {
     const client = yield* OpenAiClient
 
-    return OpenAiStt.of({
+    return Stt.of({
       transcribeStream: (audio, language, signal) =>
         pipe(
           Effect.tryPromise({
@@ -35,9 +25,9 @@ export const OpenAiSttLive = Layer.effect(
                 },
                 { signal }
               ),
-            catch: toTranscribeError
+            catch: toSttError
           }),
-          Effect.map((response) => Stream.fromAsyncIterable(response, toTranscribeError)),
+          Effect.map((response) => Stream.fromAsyncIterable(response, toSttError)),
           Stream.unwrap,
           Stream.filter(
             (event): event is OpenAI.Audio.TranscriptionTextDeltaEvent => event.type === 'transcript.text.delta'

@@ -1,8 +1,8 @@
 import type { Registry } from '$lib/effect-atom'
 import { MicVAD, utils } from '@ricky0123/vad-web'
 import { Effect, pipe } from 'effect'
-import { error, initializing, listening, ready, speaking, vadRef } from './atoms'
-import { consumeTranscription } from './transcribe'
+import { error, initializing, listening, speaking, vadReady, vadRef } from './atoms'
+import { sendAudio } from './store'
 
 // Suppress noisy VAD internal logs (https://github.com/ricky0123/vad/issues/253)
 const withSilencedVadLogs = <A>(fn: () => A): A => {
@@ -48,10 +48,13 @@ const initVad = (registry: Registry.Registry) =>
           MicVAD.new({
             baseAssetPath: '/vad/',
             onnxWASMBasePath: '/vad/',
+            positiveSpeechThreshold: 0.6,
+            negativeSpeechThreshold: 0.45,
+            minSpeechMs: 500,
             onSpeechStart: () => registry.set(speaking, true),
             onSpeechEnd: (audio) => {
               registry.set(speaking, false)
-              consumeTranscription(registry, new Uint8Array(utils.encodeWAV(audio)))
+              sendAudio(registry, new Uint8Array(utils.encodeWAV(audio)))
             },
             onVADMisfire: () => registry.set(speaking, false)
           })
@@ -65,7 +68,7 @@ const initVad = (registry: Registry.Registry) =>
     )
 
     registry.set(vadRef, mic)
-    registry.set(ready, true)
+    registry.set(vadReady, true)
     registry.set(listening, true)
   }).pipe(
     Effect.tapError((err) => Effect.sync(() => registry.set(error, err))),

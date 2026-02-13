@@ -1,28 +1,17 @@
-import { Context, Effect, Layer, Option, Stream, pipe } from 'effect'
+import { Effect, Layer, Option, Stream, pipe } from 'effect'
 import { OpenAiClient, OpenAiClientLive } from '$lib/server/openai'
-import { LlmError, type LlmMessage } from '../schema'
-import type { UserSettingsValue } from '$lib/server/user-settings'
-import { systemPrompt } from './prompt'
+import { ConversationError } from '../../schema'
+import { systemPrompt } from '../prompt'
+import { Llm } from '../llm'
 
-const toLlmError = (error: unknown) => new LlmError({ message: String(error) })
-
-export class OpenAiLlm extends Context.Tag('OpenAiLlm')<
-  OpenAiLlm,
-  {
-    readonly llmStream: (
-      messages: ReadonlyArray<LlmMessage>,
-      settings: UserSettingsValue,
-      signal?: AbortSignal
-    ) => Stream.Stream<string, LlmError>
-  }
->() {}
+const toLlmError = (error: unknown) => new ConversationError({ message: String(error), phase: 'llm' })
 
 export const OpenAiLlmLive = Layer.effect(
-  OpenAiLlm,
+  Llm,
   Effect.gen(function* () {
     const client = yield* OpenAiClient
 
-    return OpenAiLlm.of({
+    return Llm.of({
       llmStream: (messages, settings, signal) =>
         pipe(
           Effect.tryPromise({
