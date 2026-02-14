@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
-  import { useAtomValue, getRegistry } from '$lib/effect-atom'
+  import { useAtomValue, getRegistry } from '$lib/client/effect-atom'
   import { Effect } from 'effect'
   import * as auth from '$lib/features/auth/store'
 

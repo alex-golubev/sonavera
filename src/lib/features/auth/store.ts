@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation'
 import { resolve } from '$app/paths'
-import { Atom, type Registry } from '$lib/effect-atom'
+import { Atom, type Registry } from '$lib/client/effect-atom'
 import { Effect, pipe } from 'effect'
 import { authClient } from './client'
 

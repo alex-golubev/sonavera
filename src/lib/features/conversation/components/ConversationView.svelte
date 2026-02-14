@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useAtomValue, getRegistry } from '$lib/effect-atom'
+  import { useAtomValue, getRegistry } from '$lib/client/effect-atom'
   import { Effect } from 'effect'
   import { page } from '$app/state'
   import * as auth from '$lib/features/auth/store'

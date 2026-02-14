@@ -1,6 +1,7 @@
 import { FetchHttpClient, HttpClient, HttpClientError } from '@effect/platform'
 import { Effect, Layer, ManagedRuntime } from 'effect'
-import { TIMEOUT } from './http'
+
+const TIMEOUT = '15 seconds' as const
 
 const withTimeout = (client: HttpClient.HttpClient) =>
   HttpClient.transform(client, (effect, request) =>

@@ -1,4 +1,4 @@
-import type { Registry } from '$lib/effect-atom'
+import type { Registry } from '$lib/client/effect-atom'
 import { MicVAD, utils } from '@ricky0123/vad-web'
 import { Effect, pipe } from 'effect'
 import { error, initializing, listening, speaking, vadReady, vadRef } from './atoms'

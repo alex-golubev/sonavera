@@ -7,7 +7,7 @@
  * ```svelte
  * <!-- +layout.svelte -->
  * <script>
- *   import { RegistryProvider } from '$lib/effect-atom'
+ *   import { RegistryProvider } from '$lib/client/effect-atom'
  *   let { children } = $props()
  * </script>
  *
@@ -20,7 +20,7 @@
  * ```svelte
  * <!-- Component.svelte -->
  * <script>
- *   import { useAtomValue, useAtomSet } from '$lib/effect-atom'
+ *   import { useAtomValue, useAtomSet } from '$lib/client/effect-atom'
  *   import { countAtom } from './stores'
  *
  *   const count = useAtomValue(countAtom)

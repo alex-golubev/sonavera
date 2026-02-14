@@ -1,5 +1,6 @@
 import { Effect, Match, Ref, Stream, pipe } from 'effect'
-import { UserSettings } from '$lib/server/user-settings'
+import { Session, userSettingsFromUser } from '$lib/server/session'
+import type { UserSettingsValue } from '$lib/server/user-settings'
 import type { STT } from './stt'
 import type { LLM } from './llm'
 import type { TTS } from './tts'
@@ -23,7 +24,8 @@ export const conversationHandler =
   ) =>
     pipe(
       Effect.gen(function* () {
-        const settings = yield* UserSettings
+        const { user } = yield* Session
+        const settings = userSettingsFromUser(user)
         const controller = new AbortController()
         yield* Effect.addFinalizer(() => Effect.sync(() => controller.abort()))
         const signal = controller.signal
@@ -53,7 +55,7 @@ export const conversationHandler =
 const buildEventStream = (
   payload: ConversationPayload,
   userText: string,
-  settings: UserSettings['Type'],
+  settings: UserSettingsValue,
   llm: LLM['Type'],
   tts: TTS['Type'],
   signal: AbortSignal

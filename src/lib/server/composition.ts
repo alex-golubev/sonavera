@@ -10,7 +10,7 @@ import { OpenAiSttLive } from '$lib/features/conversation/server/openai/stt'
 import { OpenAiLlmLive } from '$lib/features/conversation/server/openai/llm'
 import { OpenAiTtsLive } from '$lib/features/conversation/server/openai/tts'
 import { conversationHandler } from '$lib/features/conversation/server/handler'
-import { defaultUserSettingsLayer } from '$lib/server/user-settings'
+import { AuthMiddlewareLive } from '$lib/server/session'
 
 // --- Conversation RPC handler layer ---
 
@@ -24,10 +24,15 @@ const ConversationHandlers = ConversationRpc.toLayer(
       conversationStream: conversationHandler(stt, llm, tts)
     }
   })
-).pipe(Layer.provide(Layer.mergeAll(OpenAiSttLive, OpenAiLlmLive, OpenAiTtsLive, defaultUserSettingsLayer)))
+).pipe(Layer.provide(Layer.mergeAll(OpenAiSttLive, OpenAiLlmLive, OpenAiTtsLive)))
 
 // --- RPC server ---
 
-const RpcServerLayer = Layer.mergeAll(RpcSerialization.layerMsgPack, HttpServer.layerContext, ConversationHandlers)
+const RpcServerLayer = Layer.mergeAll(
+  RpcSerialization.layerMsgPack,
+  HttpServer.layerContext,
+  ConversationHandlers,
+  AuthMiddlewareLive
+)
 
 export const { handler: rpcHandler } = RpcServer.toWebHandler(RootRpc, { layer: RpcServerLayer })
