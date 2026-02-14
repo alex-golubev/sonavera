@@ -24,7 +24,8 @@ Run a single test file: `pnpm vitest run src/path/to/file.spec.ts`
 - **Styling**: Tailwind CSS v4 with forms and typography plugins
 - **Deployment**: Vercel via `@sveltejs/adapter-vercel`
 - **Package Manager**: pnpm (engine-strict mode enabled)
-- **State Management**: Custom `@effect-atom` Svelte 5 adapter in `src/lib/effect-atom/`
+- **State Management**: Custom `@effect-atom` Svelte 5 adapter in `src/lib/client/effect-atom/`
+- **Client Runtime**: `src/lib/client/runtime.ts` — `ManagedRuntime` with HTTP timeout (15s) for browser-side Effect execution
 - **HTTP API**: Direct Effect execution in SvelteKit routes with per-feature endpoints (`/api/stt`, `/api/llm`, `/api/tts`)
 - **RPC**: `@effect/rpc` with MsgPack serialization over HTTP (`/api/rpc`) — available for future features
 - **Auth**: Better Auth with `better-auth-effect` adapter for `@effect/sql-pg`

@@ -1,7 +1,7 @@
 <script lang="ts">
   import './layout.css'
   import favicon from '$lib/assets/favicon.svg'
-  import { RegistryProvider } from '$lib/effect-atom'
+  import { RegistryProvider } from '$lib/client/effect-atom'
 
   let { children } = $props()
 </script>

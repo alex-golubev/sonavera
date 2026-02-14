@@ -7,30 +7,32 @@ export default Effect.flatMap(
   (sql) => sql`
     CREATE TABLE "user" (
       id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
       name            VARCHAR(100) NOT NULL,
       email           VARCHAR(255) NOT NULL UNIQUE,
       email_verified  BOOLEAN NOT NULL DEFAULT false,
       image           TEXT,
-      native_language VARCHAR(5) NOT NULL DEFAULT 'en',
-      target_language VARCHAR(5) NOT NULL DEFAULT 'es',
-      level           VARCHAR(2) NOT NULL DEFAULT 'A1',
-      created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-      updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+      native_language VARCHAR(2) NOT NULL DEFAULT 'en' CHECK (native_language IN ('en','es','fr','de','pt','it','ja','zh','ko','ru','he')),
+      target_language VARCHAR(2) NOT NULL DEFAULT 'es' CHECK (target_language IN ('en','es','fr','de','pt','it','ja','zh','ko','ru','he')),
+      level           VARCHAR(2) NOT NULL DEFAULT 'A1' CHECK (level IN ('A1','A2','B1','B2','C1','C2'))
     );
 
     CREATE TABLE session (
       id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
       user_id         UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
       token           VARCHAR(255) NOT NULL UNIQUE,
       expires_at      TIMESTAMPTZ NOT NULL,
       ip_address      VARCHAR(45),
-      user_agent      TEXT,
-      created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-      updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+      user_agent      TEXT
     );
 
     CREATE TABLE account (
       id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      created_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
       user_id                   UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
       account_id                VARCHAR(255) NOT NULL,
       provider_id               VARCHAR(255) NOT NULL,
@@ -40,18 +42,16 @@ export default Effect.flatMap(
       refresh_token_expires_at  TIMESTAMPTZ,
       scope                     TEXT,
       id_token                  TEXT,
-      password                  TEXT,
-      created_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
-      updated_at                TIMESTAMPTZ NOT NULL DEFAULT now()
+      password                  TEXT
     );
 
     CREATE TABLE verification (
       id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
       identifier      VARCHAR(255) NOT NULL,
       value           TEXT NOT NULL,
-      expires_at      TIMESTAMPTZ NOT NULL,
-      created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-      updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+      expires_at      TIMESTAMPTZ NOT NULL
     );
 
     CREATE INDEX idx_session_user_id ON session(user_id);
