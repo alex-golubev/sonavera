@@ -18,10 +18,7 @@ import {
 const MAX_CONTEXT_MESSAGES = 20
 
 export const conversationHandler =
-  (stt: STT['Type'], llm: LLM['Type'], tts: TTS['Type']) =>
-  (
-    payload: ConversationPayload,
-  ) =>
+  (stt: STT['Type'], llm: LLM['Type'], tts: TTS['Type']) => (payload: ConversationPayload) =>
     pipe(
       Effect.gen(function* () {
         const { user } = yield* Session
