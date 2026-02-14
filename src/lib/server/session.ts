@@ -22,6 +22,7 @@ export interface SessionValue {
 }
 
 export class Session extends Context.Tag('Session')<Session, SessionValue>() {}
+export class RpcRequestSession extends Context.Tag('RpcRequestSession')<RpcRequestSession, SessionValue | null>() {}
 
 // --- Auth Middleware ---
 
@@ -32,20 +33,17 @@ export class AuthMiddleware extends RpcMiddleware.Tag<AuthMiddleware>()('AuthMid
 
 export const AuthMiddlewareLive: Layer.Layer<AuthMiddleware> = Layer.succeed(
   AuthMiddleware,
-  AuthMiddleware.of(({ headers }) =>
+  AuthMiddleware.of(() =>
     pipe(
-      Effect.tryPromise({
-        try: () => auth.api.getSession({ headers: new globalThis.Headers(headers as Record<string, string>) }),
-        catch: () => new Unauthenticated({ message: 'Session lookup failed' })
-      }),
-      Effect.flatMap((result) =>
-        pipe(
-          Option.fromNullable(result),
-          Option.match({
-            onNone: () => Effect.fail(new Unauthenticated({ message: 'No active session' })),
-            onSome: (s) => Effect.succeed({ user: s.user, session: s.session })
-          })
-        )
+      Effect.serviceOption(RpcRequestSession),
+      Effect.flatMap(
+        Option.match({
+          onSome: (session) =>
+            session
+              ? Effect.succeed(session)
+              : Effect.fail(new Unauthenticated({ message: 'No active session' })),
+          onNone: () => Effect.fail(new Unauthenticated({ message: 'No active session' }))
+        })
       )
     )
   )
