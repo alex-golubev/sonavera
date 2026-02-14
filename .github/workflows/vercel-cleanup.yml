@@ -1,0 +1,16 @@
+name: Vercel Cleanup
+
+on:
+  schedule:
+    - cron: '0 3 * * 0' # Every Sunday at 3:00 UTC
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Vercel CLI
+        run: npm i -g vercel
+
+      - name: Remove old deployments
+        run: vercel rm sonavera --safe -y --token ${{ secrets.VERCEL_TOKEN }}
