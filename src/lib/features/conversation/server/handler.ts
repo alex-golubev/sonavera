@@ -1,4 +1,5 @@
-import { Effect, Match, Ref, Stream, pipe } from 'effect'
+import { Effect, Duration, Match, Ref, Stream, pipe } from 'effect'
+import type { SqlError } from '@effect/sql/SqlError'
 import { Session, userSettingsFromUser } from '$lib/server/session'
 import type { UserSettingsValue } from '$lib/server/user-settings'
 import type { STT } from './stt'
@@ -11,15 +12,32 @@ import {
   ConversationError,
   ConversationLlmChunk,
   ConversationLlmDone,
+  ConversationPersistFailed,
   ConversationPersisted,
+  ConversationStarted,
   ConversationTranscription,
   type ConversationPayload,
   type ConversationStreamEvent
 } from '../schema'
 
+const isTransient = (e: SqlError): boolean => {
+  const code = (e.cause as { code?: string })?.code
+  return (
+    code === '40P01' ||
+    code === '40001' ||
+    code === '55P03' ||
+    (code?.startsWith('08') ?? false) ||
+    (code?.startsWith('57P') ?? false)
+  )
+}
+
 const MAX_CONTEXT_MESSAGES = 20
 const PROVIDER = 'openai'
 const MODEL = 'gpt-4.1-mini'
+const PERSIST_TIMEOUT = Duration.seconds(10)
+
+// Persist gate: streaming → ready → saving → saved
+type PersistGate = 'streaming' | 'ready' | 'saving' | 'saved'
 
 export const conversationHandler =
   (stt: STT['Type'], llm: LLM['Type'], tts: TTS['Type'], repo: ConversationRepository['Type']) =>
@@ -68,6 +86,67 @@ const buildEventStream = (
     const messages = [...payload.messages.slice(-MAX_CONTEXT_MESSAGES), { role: 'user' as const, content: userText }]
     const ref = yield* Ref.make('')
 
+    // Pre-generated IDs
+    const convId = payload.conversationId ?? crypto.randomUUID()
+    const turnId = crypto.randomUUID()
+
+    // Persist gate: atomic state machine
+    const gate = yield* Ref.make<PersistGate>('streaming')
+
+    // Pure save operation (no state management)
+    const saveToDB = pipe(
+      Ref.get(ref),
+      Effect.flatMap((assistantText) =>
+        payload.conversationId
+          ? repo.saveSubsequent({
+              userId,
+              conversationId: payload.conversationId,
+              turnId,
+              ordinalOffset: payload.messages.length,
+              userText,
+              assistantText
+            })
+          : repo.saveFirst({
+              conversationId: convId,
+              userId,
+              turnId,
+              nativeLanguage: settings.nativeLanguage,
+              targetLanguage: settings.targetLanguage,
+              level: settings.level,
+              provider: PROVIDER,
+              model: MODEL,
+              userText,
+              assistantText
+            })
+      ),
+      Effect.retry({ times: 2, while: (e) => e._tag === 'SqlError' && isTransient(e as SqlError) }),
+      Effect.timeout(PERSIST_TIMEOUT)
+    )
+
+    // Finalizer: guaranteed persist on scope close (interrupt-safe)
+    yield* Effect.addFinalizer(() =>
+      pipe(
+        Ref.modify(gate, (s): [boolean, PersistGate] =>
+          s === 'ready' || s === 'saving' ? [true, 'saved'] : [false, s]
+        ),
+        Effect.flatMap((claimed) =>
+          claimed
+            ? pipe(
+                saveToDB,
+                Effect.tapError((e) => Effect.logError('Persist failed in finalizer', e)),
+                Effect.ignore
+              )
+            : Effect.void
+        ),
+        Effect.disconnect
+      )
+    )
+
+    // Early conversationId event (first turn only)
+    const startedEvents: Stream.Stream<ConversationStreamEvent, ConversationError> = payload.conversationId
+      ? Stream.empty
+      : Stream.make(new ConversationStarted({ conversationId: convId }))
+
     const transcriptionEvents: Stream.Stream<ConversationStreamEvent, ConversationError> =
       payload.input._tag === 'ConversationAudioInput'
         ? Stream.make(new ConversationTranscription({ text: userText }))
@@ -81,6 +160,7 @@ const buildEventStream = (
 
     const llmDoneAndTts: Stream.Stream<ConversationStreamEvent, ConversationError> = pipe(
       Ref.get(ref),
+      Effect.tap(() => Ref.set(gate, 'ready')),
       Effect.map((fullText) => {
         const doneEvent: Stream.Stream<ConversationStreamEvent, ConversationError> = Stream.make(
           new ConversationLlmDone({ text: fullText })
@@ -96,40 +176,36 @@ const buildEventStream = (
       Stream.unwrap
     )
 
+    // Best-effort persist in stream (atomic claim via Ref.modify)
     const persistStream: Stream.Stream<ConversationStreamEvent, ConversationError> = pipe(
-      Ref.get(ref),
-      Effect.flatMap((assistantText) =>
-        pipe(
-          payload.conversationId
-            ? repo.saveSubsequent({
-                conversationId: payload.conversationId,
-                ordinalOffset: payload.messages.length,
-                userText,
-                assistantText
-              })
-            : repo.saveFirst({
-                userId,
-                nativeLanguage: settings.nativeLanguage,
-                targetLanguage: settings.targetLanguage,
-                level: settings.level,
-                provider: PROVIDER,
-                model: MODEL,
-                userText,
-                assistantText
-              }),
-          Effect.map((result) => new ConversationPersisted({ conversationId: result.conversationId })),
-          Effect.catchAll(() => Effect.succeed(null))
-        )
+      Ref.modify(gate, (s): [boolean, PersistGate] => (s === 'ready' ? [true, 'saving'] : [false, s])),
+      Effect.flatMap((claimed) =>
+        claimed
+          ? pipe(
+              saveToDB,
+              Effect.tap(() => Ref.set(gate, 'saved')),
+              Effect.map(
+                (result): ConversationStreamEvent => new ConversationPersisted({ conversationId: result.conversationId })
+              ),
+              Effect.catchAll((e) =>
+                pipe(
+                  Ref.set(gate, 'saved'),
+                  Effect.andThen(Effect.logError('Conversation persist failed', e)),
+                  Effect.as(new ConversationPersistFailed() as ConversationStreamEvent)
+                )
+              )
+            )
+          : Effect.succeed(undefined as ConversationStreamEvent | undefined)
       ),
-      Effect.map(
-        (event): Stream.Stream<ConversationStreamEvent, ConversationError> =>
-          event ? Stream.make(event) : Stream.empty
+      Effect.map((event): Stream.Stream<ConversationStreamEvent, ConversationError> =>
+        event ? Stream.make(event) : Stream.empty
       ),
       Stream.unwrap
     )
 
     return pipe(
-      transcriptionEvents,
+      startedEvents,
+      Stream.concat(transcriptionEvents),
       Stream.concat(llmEvents),
       Stream.concat(llmDoneAndTts),
       Stream.concat(Stream.make(new ConversationDone())),

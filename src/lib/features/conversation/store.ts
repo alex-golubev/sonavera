@@ -10,6 +10,7 @@ import {
   listening,
   messages,
   muted,
+  persistFailed,
   phase,
   playerRef,
   speaking,
@@ -90,9 +91,20 @@ const processEvent = (registry: Registry.Registry) => (event: ConversationStream
         )
       })
     ),
+    Match.tag('ConversationStarted', (e) =>
+      Effect.sync(() => {
+        registry.set(conversationId, e.conversationId)
+      })
+    ),
     Match.tag('ConversationPersisted', (e) =>
       Effect.sync(() => {
         registry.set(conversationId, e.conversationId)
+        registry.set(persistFailed, false)
+      })
+    ),
+    Match.tag('ConversationPersistFailed', () =>
+      Effect.sync(() => {
+        registry.set(persistFailed, true)
       })
     ),
     Match.exhaustive
@@ -141,6 +153,7 @@ const startPipeline = (registry: Registry.Registry, input: ConversationAudioInpu
           registry.set(streamingText, '')
           registry.set(transcription, '')
           registry.set(error, '')
+          registry.set(persistFailed, false)
           registry.set(phase, 'transcribing')
         })
       ),
@@ -217,6 +230,7 @@ export const destroy = (registry: Registry.Registry) =>
 
     // Reset state
     registry.set(conversationId, undefined)
+    registry.set(persistFailed, false)
     registry.set(messages, [])
     registry.set(streamingText, '')
     registry.set(transcription, '')
@@ -232,6 +246,7 @@ export {
   listening,
   messages,
   muted,
+  persistFailed,
   phase,
   speaking,
   streamingText,

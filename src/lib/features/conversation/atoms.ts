@@ -29,6 +29,7 @@ export const muted = Atom.make(false)
 // --- Error ---
 
 export const error = Atom.make('')
+export const persistFailed = Atom.make(false)
 
 // --- Internal refs (keepAlive to prevent GC) ---
 

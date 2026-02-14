@@ -1,6 +1,6 @@
 import { SqlClient } from '@effect/sql'
 import { Effect, Layer } from 'effect'
-import { ConversationRepository } from './repository'
+import { ConversationAccessDenied, ConversationRepository } from './repository'
 
 export const ConversationRepositoryLive = Layer.effect(
   ConversationRepository,
@@ -11,42 +11,51 @@ export const ConversationRepositoryLive = Layer.effect(
       saveFirst: (params) =>
         sql.withTransaction(
           Effect.gen(function* () {
-            const rows = yield* sql`
-              INSERT INTO conversation (user_id, native_language, target_language, level, provider, model)
-              VALUES (${params.userId}, ${params.nativeLanguage}, ${params.targetLanguage}, ${params.level}, ${params.provider}, ${params.model})
-              RETURNING id
-            `
-            const conversationId = (rows[0] as { id: string }).id
-
             yield* sql`
-              INSERT INTO message (conversation_id, role, content, ordinal)
-              VALUES (${conversationId}, 'user', ${params.userText}, 0)
+              INSERT INTO conversation (id, user_id, native_language, target_language, level, provider, model)
+              VALUES (${params.conversationId}, ${params.userId}, ${params.nativeLanguage}, ${params.targetLanguage}, ${params.level}, ${params.provider}, ${params.model})
+              ON CONFLICT (id) DO NOTHING
             `
 
             yield* sql`
-              INSERT INTO message (conversation_id, role, content, ordinal)
-              VALUES (${conversationId}, 'assistant', ${params.assistantText}, 1)
+              INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
+              VALUES (${params.conversationId}, ${params.turnId}, 'user', ${params.userText}, 0)
+              ON CONFLICT (conversation_id, ordinal) DO NOTHING
             `
 
-            return { conversationId }
+            yield* sql`
+              INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
+              VALUES (${params.conversationId}, ${params.turnId}, 'assistant', ${params.assistantText}, 1)
+              ON CONFLICT (conversation_id, ordinal) DO NOTHING
+            `
+
+            return { conversationId: params.conversationId }
           })
         ),
 
       saveSubsequent: (params) =>
         sql.withTransaction(
           Effect.gen(function* () {
+            const updated = yield* sql`
+              UPDATE conversation SET updated_at = now()
+              WHERE id = ${params.conversationId} AND user_id = ${params.userId}
+              RETURNING id
+            `
+
+            yield* updated.length === 0
+              ? Effect.fail(new ConversationAccessDenied({ conversationId: params.conversationId }))
+              : Effect.void
+
             yield* sql`
-              UPDATE conversation SET updated_at = now() WHERE id = ${params.conversationId}
+              INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
+              VALUES (${params.conversationId}, ${params.turnId}, 'user', ${params.userText}, ${params.ordinalOffset})
+              ON CONFLICT (conversation_id, ordinal) DO NOTHING
             `
 
             yield* sql`
-              INSERT INTO message (conversation_id, role, content, ordinal)
-              VALUES (${params.conversationId}, 'user', ${params.userText}, ${params.ordinalOffset})
-            `
-
-            yield* sql`
-              INSERT INTO message (conversation_id, role, content, ordinal)
-              VALUES (${params.conversationId}, 'assistant', ${params.assistantText}, ${params.ordinalOffset + 1})
+              INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
+              VALUES (${params.conversationId}, ${params.turnId}, 'assistant', ${params.assistantText}, ${params.ordinalOffset + 1})
+              ON CONFLICT (conversation_id, ordinal) DO NOTHING
             `
 
             return { conversationId: params.conversationId }
