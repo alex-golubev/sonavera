@@ -20,13 +20,13 @@ export const ConversationRepositoryLive = Layer.effect(
             yield* sql`
               INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
               VALUES (${params.conversationId}, ${params.turnId}, 'user', ${params.userText}, 0)
-              ON CONFLICT (conversation_id, ordinal) DO NOTHING
+              ON CONFLICT (conversation_id, turn_id, role) DO NOTHING
             `
 
             yield* sql`
               INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
               VALUES (${params.conversationId}, ${params.turnId}, 'assistant', ${params.assistantText}, 1)
-              ON CONFLICT (conversation_id, ordinal) DO NOTHING
+              ON CONFLICT (conversation_id, turn_id, role) DO NOTHING
             `
 
             return { conversationId: params.conversationId }
@@ -55,13 +55,13 @@ export const ConversationRepositoryLive = Layer.effect(
             yield* sql`
               INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
               VALUES (${params.conversationId}, ${params.turnId}, 'user', ${params.userText}, ${nextOrdinal})
-              ON CONFLICT (conversation_id, ordinal) DO NOTHING
+              ON CONFLICT (conversation_id, turn_id, role) DO NOTHING
             `
 
             yield* sql`
               INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
               VALUES (${params.conversationId}, ${params.turnId}, 'assistant', ${params.assistantText}, ${nextOrdinal + 1})
-              ON CONFLICT (conversation_id, ordinal) DO NOTHING
+              ON CONFLICT (conversation_id, turn_id, role) DO NOTHING
             `
 
             return { conversationId: params.conversationId }
