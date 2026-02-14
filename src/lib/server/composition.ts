@@ -10,6 +10,7 @@ import { OpenAiSttLive } from '$lib/features/conversation/server/openai/stt'
 import { OpenAiLlmLive } from '$lib/features/conversation/server/openai/llm'
 import { OpenAiTtsLive } from '$lib/features/conversation/server/openai/tts'
 import { conversationHandler } from '$lib/features/conversation/server/handler'
+import { defaultUserSettingsLayer } from '$lib/server/user-settings'
 
 // --- Conversation RPC handler layer ---
 
@@ -23,7 +24,7 @@ const ConversationHandlers = ConversationRpc.toLayer(
       conversationStream: conversationHandler(stt, llm, tts)
     }
   })
-).pipe(Layer.provide(Layer.mergeAll(OpenAiSttLive, OpenAiLlmLive, OpenAiTtsLive)))
+).pipe(Layer.provide(Layer.mergeAll(OpenAiSttLive, OpenAiLlmLive, OpenAiTtsLive, defaultUserSettingsLayer)))
 
 // --- RPC server ---
 

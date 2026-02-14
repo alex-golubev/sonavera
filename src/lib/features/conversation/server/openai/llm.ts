@@ -24,7 +24,7 @@ const createCompletion = (
           stream: true,
           messages: [
             { role: 'developer', content: systemPrompt(settings) },
-            ...messages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+            ...messages.map((m) => ({ role: m.role, content: m.content }))
           ]
         },
         { signal }

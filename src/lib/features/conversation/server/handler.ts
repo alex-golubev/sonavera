@@ -1,8 +1,5 @@
-import { Effect, Match, Ref, Stream, pipe } from 'effect'
-import type { Headers } from '@effect/platform/Headers'
-import { DEFAULT_NATIVE_LANGUAGE, DEFAULT_TARGET_LANGUAGE, type Language } from '$lib/features/language/schema'
-import { DEFAULT_LEVEL, type Level } from '$lib/features/level/schema'
-import type { UserSettingsValue } from '$lib/server/user-settings'
+import { Effect, Match, Ref, Scope, Stream, pipe } from 'effect'
+import { UserSettings } from '$lib/server/user-settings'
 import type { STT } from './stt'
 import type { LLM } from './llm'
 import type { TTS } from './tts'
@@ -17,34 +14,26 @@ import {
   type ConversationStreamEvent
 } from '../schema'
 
-const parseUserSettings = (headers: Headers): UserSettingsValue => {
-  const raw = headers['x-user-settings']
-  const parsed = raw ? JSON.parse(raw) : {}
-  return {
-    nativeLanguage: (parsed.nativeLanguage ?? DEFAULT_NATIVE_LANGUAGE) as Language,
-    targetLanguage: (parsed.targetLanguage ?? DEFAULT_TARGET_LANGUAGE) as Language,
-    level: (parsed.level ?? DEFAULT_LEVEL) as Level
-  }
-}
-
 const MAX_CONTEXT_MESSAGES = 20
 
 export const conversationHandler =
   (stt: STT['Type'], llm: LLM['Type'], tts: TTS['Type']) =>
   (
     payload: ConversationPayload,
-    options: { readonly clientId: number; readonly headers: Headers }
-  ): Stream.Stream<ConversationStreamEvent, ConversationError> =>
+  ) =>
     pipe(
       Effect.gen(function* () {
-        const settings = parseUserSettings(options.headers)
+        const settings = yield* UserSettings
+        const controller = new AbortController()
+        yield* Effect.addFinalizer(() => Effect.sync(() => controller.abort()))
+        const signal = controller.signal
 
         // Phase 1: resolve user text
         const userText = yield* pipe(
           Match.value(payload.input),
           Match.tag('ConversationAudioInput', (input) =>
             pipe(
-              stt.transcribeStream(input.data, settings.targetLanguage),
+              stt.transcribeStream(input.data, settings.targetLanguage, signal),
               Stream.runFold('', (acc, delta) => acc + delta)
             )
           ),
@@ -56,17 +45,18 @@ export const conversationHandler =
         const trimmed = userText.trim()
         return trimmed.length === 0
           ? Stream.make(new ConversationDone())
-          : yield* buildEventStream(payload, trimmed, settings, llm, tts)
+          : yield* buildEventStream(payload, trimmed, settings, llm, tts, signal)
       }),
-      Stream.unwrap
+      Stream.unwrapScoped
     )
 
 const buildEventStream = (
   payload: ConversationPayload,
   userText: string,
-  settings: UserSettingsValue,
+  settings: UserSettings['Type'],
   llm: LLM['Type'],
-  tts: TTS['Type']
+  tts: TTS['Type'],
+  signal: AbortSignal
 ) =>
   Effect.gen(function* () {
     const messages = [...payload.messages.slice(-MAX_CONTEXT_MESSAGES), { role: 'user' as const, content: userText }]
@@ -78,7 +68,7 @@ const buildEventStream = (
         : Stream.empty
 
     const llmEvents: Stream.Stream<ConversationStreamEvent, ConversationError> = pipe(
-      llm.llmStream(messages, settings),
+      llm.llmStream(messages, settings, signal),
       Stream.tap((delta) => Ref.update(ref, (acc) => acc + delta)),
       Stream.map((delta) => new ConversationLlmChunk({ text: delta }))
     )
@@ -91,7 +81,7 @@ const buildEventStream = (
         )
         const audioEvents: Stream.Stream<ConversationStreamEvent, ConversationError> = payload.tts
           ? pipe(
-              tts.speakStream(fullText, 'coral'),
+              tts.speakStream(fullText, 'coral', signal),
               Stream.map((data) => new ConversationAudioChunk({ data }))
             )
           : Stream.empty

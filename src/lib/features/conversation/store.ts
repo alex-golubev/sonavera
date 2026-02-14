@@ -162,14 +162,13 @@ export const toggle = (registry: Registry.Registry) => {
   )
 }
 
-export const warmup = (registry: Registry.Registry) =>
-  Effect.sync(() => {
-    void pipe(
-      ensurePlayer(registry),
-      Effect.catchAll(() => Effect.void),
-      Effect.runPromise
-    )
-  })
+export const warmup = (registry: Registry.Registry) => {
+  void pipe(
+    ensurePlayer(registry),
+    Effect.catchAll(() => Effect.void),
+    Effect.runPromise
+  )
+}
 
 export const toggleMute = (registry: Registry.Registry) =>
   Effect.sync(() => {

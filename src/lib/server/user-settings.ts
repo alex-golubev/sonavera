@@ -19,3 +19,9 @@ export const userSettingsLayer = (user: AuthUser): Layer.Layer<UserSettings> =>
     targetLanguage: (user.targetLanguage ?? DEFAULT_TARGET_LANGUAGE) as Language,
     level: (user.level ?? DEFAULT_LEVEL) as Level
   })
+
+export const defaultUserSettingsLayer: Layer.Layer<UserSettings> = Layer.succeed(UserSettings, {
+  nativeLanguage: DEFAULT_NATIVE_LANGUAGE,
+  targetLanguage: DEFAULT_TARGET_LANGUAGE,
+  level: DEFAULT_LEVEL
+})

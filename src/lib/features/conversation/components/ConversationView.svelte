@@ -28,7 +28,7 @@
 
   // --- Mic handler (user gesture — warmup TTS here for Safari) ---
   const handleMicClick = () => {
-    Effect.runSync(conversation.warmup(registry))
+    conversation.warmup(registry)
     conversation.toggle(registry)
   }
 
