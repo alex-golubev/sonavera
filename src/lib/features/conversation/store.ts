@@ -1,6 +1,6 @@
 import { RpcClient } from '@effect/rpc'
 import { type Registry } from '$lib/client/effect-atom'
-import { ProtocolLive } from '$lib/rpc/protocol'
+import { ProtocolLive } from '$lib/client/protocol'
 import { clientRuntime } from '$lib/client/runtime'
 import { Effect, Fiber, Match, Option, Stream, pipe } from 'effect'
 import {

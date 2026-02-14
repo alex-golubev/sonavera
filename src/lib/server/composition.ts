@@ -1,7 +1,6 @@
 import { HttpServer } from '@effect/platform'
-import { RpcSerialization, RpcServer } from '@effect/rpc'
+import { RpcGroup, RpcSerialization, RpcServer } from '@effect/rpc'
 import { Effect, Layer } from 'effect'
-import { RootRpc } from '$lib/rpc/rpc'
 import { ConversationRpc } from '$lib/features/conversation/server/rpc'
 import { STT } from '$lib/features/conversation/server/stt'
 import { LLM } from '$lib/features/conversation/server/llm'
@@ -34,5 +33,7 @@ const RpcServerLayer = Layer.mergeAll(
   ConversationHandlers,
   AuthMiddlewareLive
 )
+
+class RootRpc extends RpcGroup.make().merge(ConversationRpc) {}
 
 export const { handler: rpcHandler } = RpcServer.toWebHandler(RootRpc, { layer: RpcServerLayer })
