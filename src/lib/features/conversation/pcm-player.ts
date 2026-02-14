@@ -1,5 +1,3 @@
-import { pipe } from 'effect'
-
 // --- Config (data) ---
 
 type PCMConfig = {
@@ -77,7 +75,7 @@ export const createPlayer = (ctx: AudioContext): PCMPlayer => {
   let state = initialState()
 
   const checkDrained = (): void => {
-    pipe(state.finished && state.activeSources.size === 0, (ready) => ready && state.drainCallback?.())
+    if (state.finished && state.activeSources.size === 0) state.drainCallback?.()
   }
 
   const scheduleAudio = (floatData: Float32Array): void => {
@@ -99,7 +97,7 @@ export const createPlayer = (ctx: AudioContext): PCMPlayer => {
   const processBytes = (bytes: Uint8Array): void => {
     const [aligned, remainder] = alignToSampleBoundary(concatBytes(state.pendingBytes, bytes))
     state.pendingBytes = remainder
-    pipe(aligned.length > 0, (hasData) => hasData && scheduleAudio(pcmToFloat32(aligned)))
+    if (aligned.length > 0) scheduleAudio(pcmToFloat32(aligned))
   }
 
   const flushPreBuffer = (): void => {
@@ -111,7 +109,7 @@ export const createPlayer = (ctx: AudioContext): PCMPlayer => {
 
   const handleBuffering = (bytes: Uint8Array): void => {
     state.preBuffer = concatBytes(state.preBuffer, bytes)
-    pipe(state.preBuffer.length >= preBufferBytes(pcmConfig), (ready) => ready && flushPreBuffer())
+    if (state.preBuffer.length >= preBufferBytes(pcmConfig)) flushPreBuffer()
   }
 
   const reset = (): void => {
@@ -125,7 +123,7 @@ export const createPlayer = (ctx: AudioContext): PCMPlayer => {
   return {
     playChunk: (pcmBytes) => (state.isBuffering ? handleBuffering(pcmBytes) : processBytes(pcmBytes)),
     finish: (onDrained) => {
-      pipe(state.isBuffering, (buffering) => buffering && flushPreBuffer())
+      if (state.isBuffering) flushPreBuffer()
       state.finished = true
       state.drainCallback = onDrained
       checkDrained()
