@@ -1,4 +1,4 @@
-import { Effect, Match, Ref, Scope, Stream, pipe } from 'effect'
+import { Effect, Match, Ref, Stream, pipe } from 'effect'
 import { UserSettings } from '$lib/server/user-settings'
 import type { STT } from './stt'
 import type { LLM } from './llm'
