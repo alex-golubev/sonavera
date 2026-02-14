@@ -102,7 +102,6 @@ const buildEventStream = (
               userId,
               conversationId: payload.conversationId,
               turnId,
-              ordinalOffset: payload.messages.length,
               userText,
               assistantText
             })
@@ -185,7 +184,8 @@ const buildEventStream = (
               saveToDB,
               Effect.tap(() => Ref.set(gate, 'saved')),
               Effect.map(
-                (result): ConversationStreamEvent => new ConversationPersisted({ conversationId: result.conversationId })
+                (result): ConversationStreamEvent =>
+                  new ConversationPersisted({ conversationId: result.conversationId })
               ),
               Effect.catchAll((e) =>
                 pipe(
@@ -197,8 +197,9 @@ const buildEventStream = (
             )
           : Effect.succeed(undefined as ConversationStreamEvent | undefined)
       ),
-      Effect.map((event): Stream.Stream<ConversationStreamEvent, ConversationError> =>
-        event ? Stream.make(event) : Stream.empty
+      Effect.map(
+        (event): Stream.Stream<ConversationStreamEvent, ConversationError> =>
+          event ? Stream.make(event) : Stream.empty
       ),
       Stream.unwrap
     )

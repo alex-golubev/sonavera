@@ -46,15 +46,21 @@ export const ConversationRepositoryLive = Layer.effect(
               ? Effect.fail(new ConversationAccessDenied({ conversationId: params.conversationId }))
               : Effect.void
 
+            const [{ nextOrdinal }] = yield* sql<{ nextOrdinal: number }>`
+              SELECT COALESCE(MAX(ordinal), -1) + 1 AS next_ordinal
+              FROM message
+              WHERE conversation_id = ${params.conversationId}
+            `
+
             yield* sql`
               INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
-              VALUES (${params.conversationId}, ${params.turnId}, 'user', ${params.userText}, ${params.ordinalOffset})
+              VALUES (${params.conversationId}, ${params.turnId}, 'user', ${params.userText}, ${nextOrdinal})
               ON CONFLICT (conversation_id, ordinal) DO NOTHING
             `
 
             yield* sql`
               INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
-              VALUES (${params.conversationId}, ${params.turnId}, 'assistant', ${params.assistantText}, ${params.ordinalOffset + 1})
+              VALUES (${params.conversationId}, ${params.turnId}, 'assistant', ${params.assistantText}, ${nextOrdinal + 1})
               ON CONFLICT (conversation_id, ordinal) DO NOTHING
             `
 

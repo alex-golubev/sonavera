@@ -25,7 +25,6 @@ export class ConversationRepository extends Context.Tag('ConversationRepository'
       readonly userId: string
       readonly conversationId: string
       readonly turnId: string
-      readonly ordinalOffset: number
       readonly userText: string
       readonly assistantText: string
     }) => Effect.Effect<{ readonly conversationId: string }, SqlError | ConversationAccessDenied>
