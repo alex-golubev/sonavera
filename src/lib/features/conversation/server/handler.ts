@@ -4,21 +4,26 @@ import type { UserSettingsValue } from '$lib/server/user-settings'
 import type { STT } from './stt'
 import type { LLM } from './llm'
 import type { TTS } from './tts'
+import type { ConversationRepository } from './repository'
 import {
   ConversationAudioChunk,
   ConversationDone,
   ConversationError,
   ConversationLlmChunk,
   ConversationLlmDone,
+  ConversationPersisted,
   ConversationTranscription,
   type ConversationPayload,
   type ConversationStreamEvent
 } from '../schema'
 
 const MAX_CONTEXT_MESSAGES = 20
+const PROVIDER = 'openai'
+const MODEL = 'gpt-4.1-mini'
 
 export const conversationHandler =
-  (stt: STT['Type'], llm: LLM['Type'], tts: TTS['Type']) => (payload: ConversationPayload) =>
+  (stt: STT['Type'], llm: LLM['Type'], tts: TTS['Type'], repo: ConversationRepository['Type']) =>
+  (payload: ConversationPayload) =>
     pipe(
       Effect.gen(function* () {
         const { user } = yield* Session
@@ -44,7 +49,7 @@ export const conversationHandler =
         const trimmed = userText.trim()
         return trimmed.length === 0
           ? Stream.make(new ConversationDone())
-          : yield* buildEventStream(payload, trimmed, settings, llm, tts, signal)
+          : yield* buildEventStream(payload, trimmed, settings, user.id, llm, tts, repo, signal)
       }),
       Stream.unwrapScoped
     )
@@ -53,8 +58,10 @@ const buildEventStream = (
   payload: ConversationPayload,
   userText: string,
   settings: UserSettingsValue,
+  userId: string,
   llm: LLM['Type'],
   tts: TTS['Type'],
+  repo: ConversationRepository['Type'],
   signal: AbortSignal
 ) =>
   Effect.gen(function* () {
@@ -89,10 +96,43 @@ const buildEventStream = (
       Stream.unwrap
     )
 
+    const persistStream: Stream.Stream<ConversationStreamEvent, ConversationError> = pipe(
+      Ref.get(ref),
+      Effect.flatMap((assistantText) =>
+        pipe(
+          payload.conversationId
+            ? repo.saveSubsequent({
+                conversationId: payload.conversationId,
+                ordinalOffset: payload.messages.length,
+                userText,
+                assistantText
+              })
+            : repo.saveFirst({
+                userId,
+                nativeLanguage: settings.nativeLanguage,
+                targetLanguage: settings.targetLanguage,
+                level: settings.level,
+                provider: PROVIDER,
+                model: MODEL,
+                userText,
+                assistantText
+              }),
+          Effect.map((result) => new ConversationPersisted({ conversationId: result.conversationId })),
+          Effect.catchAll(() => Effect.succeed(null))
+        )
+      ),
+      Effect.map(
+        (event): Stream.Stream<ConversationStreamEvent, ConversationError> =>
+          event ? Stream.make(event) : Stream.empty
+      ),
+      Stream.unwrap
+    )
+
     return pipe(
       transcriptionEvents,
       Stream.concat(llmEvents),
       Stream.concat(llmDoneAndTts),
-      Stream.concat(Stream.make(new ConversationDone()))
+      Stream.concat(Stream.make(new ConversationDone())),
+      Stream.concat(persistStream)
     )
   })

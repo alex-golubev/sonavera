@@ -39,9 +39,7 @@ export const AuthMiddlewareLive: Layer.Layer<AuthMiddleware> = Layer.succeed(
       Effect.flatMap(
         Option.match({
           onSome: (session) =>
-            session
-              ? Effect.succeed(session)
-              : Effect.fail(new Unauthenticated({ message: 'No active session' })),
+            session ? Effect.succeed(session) : Effect.fail(new Unauthenticated({ message: 'No active session' })),
           onNone: () => Effect.fail(new Unauthenticated({ message: 'No active session' }))
         })
       )

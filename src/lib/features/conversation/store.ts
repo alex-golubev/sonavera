@@ -4,6 +4,7 @@ import { ProtocolLive } from '$lib/client/protocol'
 import { clientRuntime } from '$lib/client/runtime'
 import { Effect, Fiber, Match, Option, Stream, pipe } from 'effect'
 import {
+  conversationId,
   error,
   fiberRef,
   listening,
@@ -89,6 +90,11 @@ const processEvent = (registry: Registry.Registry) => (event: ConversationStream
         )
       })
     ),
+    Match.tag('ConversationPersisted', (e) =>
+      Effect.sync(() => {
+        registry.set(conversationId, e.conversationId)
+      })
+    ),
     Match.exhaustive
   )
 
@@ -102,7 +108,8 @@ const runPipeline = (registry: Registry.Registry, input: ConversationAudioInput)
     const stream = client.conversationStream({
       messages: [...registry.get(messages)],
       input,
-      tts: !isMuted
+      tts: !isMuted,
+      conversationId: registry.get(conversationId)
     })
 
     yield* !isMuted
@@ -209,6 +216,7 @@ export const destroy = (registry: Registry.Registry) =>
     registry.set(playerRef, undefined)
 
     // Reset state
+    registry.set(conversationId, undefined)
     registry.set(messages, [])
     registry.set(streamingText, '')
     registry.set(transcription, '')
@@ -218,6 +226,7 @@ export const destroy = (registry: Registry.Registry) =>
 
 // Re-export atoms for UI consumption
 export {
+  conversationId,
   error,
   initializing,
   listening,

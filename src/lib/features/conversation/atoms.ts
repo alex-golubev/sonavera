@@ -32,6 +32,7 @@ export const error = Atom.make('')
 
 // --- Internal refs (keepAlive to prevent GC) ---
 
+export const conversationId = Atom.keepAlive(Atom.make<string | undefined>(undefined))
 export const vadRef = Atom.keepAlive(Atom.make<MicVAD | undefined>(undefined))
 export const fiberRef = Atom.keepAlive(Atom.make<Fiber.RuntimeFiber<void, unknown> | undefined>(undefined))
 export const playerRef = Atom.keepAlive(Atom.make<PCMPlayer | undefined>(undefined))
