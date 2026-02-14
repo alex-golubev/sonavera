@@ -1,12 +1,4 @@
-import { Rpc, RpcGroup } from '@effect/rpc'
 import { AuthMiddleware } from '$lib/server/session'
-import { ConversationError, ConversationPayload, ConversationStreamEvent } from '../schema'
+import { ConversationRpc as BaseConversationRpc } from '../rpc'
 
-export class ConversationRpc extends RpcGroup.make(
-  Rpc.make('conversationStream', {
-    payload: ConversationPayload,
-    success: ConversationStreamEvent,
-    error: ConversationError,
-    stream: true
-  })
-).middleware(AuthMiddleware) {}
+export class ConversationRpc extends BaseConversationRpc.middleware(AuthMiddleware) {}

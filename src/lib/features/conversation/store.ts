@@ -18,8 +18,8 @@ import {
   vadRef
 } from './atoms'
 import { createPlayer, pcmConfig } from './pcm-player'
-import { ConversationRpc } from './server/rpc'
-import { ConversationAudioInput, ConversationTextInput, type ConversationStreamEvent } from './schema'
+import { ConversationRpc } from './rpc'
+import { ConversationAudioInput, type ConversationStreamEvent } from './schema'
 import { createVad, toggleVad } from './vad'
 
 // --- PCM player helpers ---
@@ -94,7 +94,7 @@ const processEvent = (registry: Registry.Registry) => (event: ConversationStream
 
 // --- Pipeline ---
 
-const runPipeline = (registry: Registry.Registry, input: ConversationAudioInput | ConversationTextInput) =>
+const runPipeline = (registry: Registry.Registry, input: ConversationAudioInput) =>
   Effect.gen(function* () {
     const client = yield* RpcClient.make(ConversationRpc)
     const isMuted = registry.get(muted)
@@ -123,7 +123,7 @@ const runPipeline = (registry: Registry.Registry, input: ConversationAudioInput 
     )
   )
 
-const startPipeline = (registry: Registry.Registry, input: ConversationAudioInput | ConversationTextInput) => {
+const startPipeline = (registry: Registry.Registry, input: ConversationAudioInput) => {
   const prev = registry.get(fiberRef)
   const fiber = clientRuntime.runFork(
     pipe(
@@ -134,7 +134,7 @@ const startPipeline = (registry: Registry.Registry, input: ConversationAudioInpu
           registry.set(streamingText, '')
           registry.set(transcription, '')
           registry.set(error, '')
-          registry.set(phase, input._tag === 'ConversationAudioInput' ? 'transcribing' : 'responding')
+          registry.set(phase, 'transcribing')
         })
       ),
       Effect.andThen(runPipeline(registry, input))
@@ -147,11 +147,6 @@ const startPipeline = (registry: Registry.Registry, input: ConversationAudioInpu
 
 export const sendAudio = (registry: Registry.Registry, audio: Uint8Array) =>
   startPipeline(registry, new ConversationAudioInput({ data: audio }))
-
-export const sendText = (registry: Registry.Registry, text: string) => {
-  registry.set(messages, [...registry.get(messages), { role: 'user' as const, content: text }])
-  startPipeline(registry, new ConversationTextInput({ text }))
-}
 
 export const toggle = (registry: Registry.Registry) => {
   clientRuntime.runFork(
