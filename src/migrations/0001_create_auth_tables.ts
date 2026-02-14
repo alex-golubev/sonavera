@@ -13,9 +13,9 @@ export default Effect.flatMap(
       email           VARCHAR(255) NOT NULL UNIQUE,
       email_verified  BOOLEAN NOT NULL DEFAULT false,
       image           TEXT,
-      native_language VARCHAR(5) NOT NULL DEFAULT 'en',
-      target_language VARCHAR(5) NOT NULL DEFAULT 'es',
-      level           VARCHAR(2) NOT NULL DEFAULT 'A1'
+      native_language VARCHAR(2) NOT NULL DEFAULT 'en' CHECK (native_language IN ('en','es','fr','de','pt','it','ja','zh','ko','ru','he')),
+      target_language VARCHAR(2) NOT NULL DEFAULT 'es' CHECK (target_language IN ('en','es','fr','de','pt','it','ja','zh','ko','ru','he')),
+      level           VARCHAR(2) NOT NULL DEFAULT 'A1' CHECK (level IN ('A1','A2','B1','B2','C1','C2'))
     );
 
     CREATE TABLE session (

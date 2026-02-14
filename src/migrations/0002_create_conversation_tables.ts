@@ -11,9 +11,9 @@ export default Effect.flatMap(
       updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
       user_id         UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
       title           VARCHAR(255),
-      native_language VARCHAR(5) NOT NULL,
-      target_language VARCHAR(5) NOT NULL,
-      level           VARCHAR(2) NOT NULL,
+      native_language VARCHAR(2) NOT NULL CHECK (native_language IN ('en','es','fr','de','pt','it','ja','zh','ko','ru','he')),
+      target_language VARCHAR(2) NOT NULL CHECK (target_language IN ('en','es','fr','de','pt','it','ja','zh','ko','ru','he')),
+      level           VARCHAR(2) NOT NULL CHECK (level IN ('A1','A2','B1','B2','C1','C2')),
       provider        VARCHAR(50) NOT NULL,
       model           VARCHAR(100) NOT NULL,
       status          VARCHAR(10) NOT NULL DEFAULT 'active'
