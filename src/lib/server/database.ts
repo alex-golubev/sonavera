@@ -6,8 +6,10 @@ const snakeToCamel = (s: string): string => s.replace(/_([a-z])/g, (_, c: string
 
 const camelToSnake = (s: string): string => s.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`)
 
+const normalizeSslMode = (url: string): string => url.replace(/sslmode=require(?!-)/, 'sslmode=verify-full')
+
 export const DatabaseLive = PgClient.layer({
-  url: Redacted.make(env.DATABASE_URL ?? ''),
+  url: Redacted.make(normalizeSslMode(env.DATABASE_URL ?? '')),
   maxConnections: 5,
   idleTimeout: '30 seconds',
   connectTimeout: '10 seconds',
