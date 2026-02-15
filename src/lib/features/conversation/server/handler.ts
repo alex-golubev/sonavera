@@ -1,4 +1,4 @@
-import { Effect, Duration, Match, Ref, Stream, pipe } from 'effect'
+import { Effect, Duration, Match, Option, Ref, Stream, pipe } from 'effect'
 import type { SqlError } from '@effect/sql/SqlError'
 import { Session, userSettingsFromUser } from '$lib/server/session'
 import type { UserSettingsValue } from '$lib/server/user-settings'
@@ -20,8 +20,15 @@ import {
   type ConversationStreamEvent
 } from '../schema'
 
+const pgErrorCode = (e: SqlError): string | undefined => {
+  const cause = e.cause
+  return typeof cause === 'object' && cause !== null && 'code' in cause && typeof cause.code === 'string'
+    ? cause.code
+    : undefined
+}
+
 const isTransient = (e: SqlError): boolean => {
-  const code = (e.cause as { code?: string })?.code
+  const code = pgErrorCode(e)
   return (
     code === '40P01' ||
     code === '40001' ||
@@ -32,8 +39,6 @@ const isTransient = (e: SqlError): boolean => {
 }
 
 const MAX_CONTEXT_MESSAGES = 20
-const PROVIDER = 'openai'
-const MODEL = 'gpt-4.1-mini'
 const PERSIST_TIMEOUT = Duration.seconds(10)
 
 // Persist gate: streaming → ready → saving → saved
@@ -90,7 +95,9 @@ const buildEventStream = (
     const convId = payload.conversationId ?? crypto.randomUUID()
     const turnId = crypto.randomUUID()
 
-    // Persist gate: atomic state machine
+    // Persist gate: atomic state machine.
+    // Starts as 'streaming' — if interrupted before LLM completes, gate stays 'streaming'
+    // and the finalizer skips saving, preventing partial assistant responses from being persisted.
     const gate = yield* Ref.make<PersistGate>('streaming')
 
     // Pure save operation (no state management)
@@ -112,8 +119,8 @@ const buildEventStream = (
               nativeLanguage: settings.nativeLanguage,
               targetLanguage: settings.targetLanguage,
               level: settings.level,
-              provider: PROVIDER,
-              model: MODEL,
+              provider: llm.provider,
+              model: llm.model,
               userText,
               assistantText
             })
@@ -122,7 +129,10 @@ const buildEventStream = (
       Effect.timeout(PERSIST_TIMEOUT)
     )
 
-    // Finalizer: guaranteed persist on scope close (interrupt-safe)
+    // Finalizer: guaranteed persist on scope close (interrupt-safe).
+    // If interrupted while persistStream's saveToDB is in-flight (gate = 'saving'),
+    // both may run concurrently. The interrupted one rolls back its transaction;
+    // this one completes via Effect.disconnect. ON CONFLICT DO NOTHING ensures safety.
     yield* Effect.addFinalizer(() =>
       pipe(
         Ref.modify(gate, (s): [boolean, PersistGate] =>
@@ -184,26 +194,33 @@ const buildEventStream = (
               saveToDB,
               Effect.tap(() => Ref.set(gate, 'saved')),
               Effect.map(
-                (result): ConversationStreamEvent =>
-                  new ConversationPersisted({ conversationId: result.conversationId })
+                (result): Option.Option<ConversationStreamEvent> =>
+                  Option.some(new ConversationPersisted({ conversationId: result.conversationId }))
               ),
+              // catchAll intentionally generalizes all errors (including ConversationAccessDenied)
+              // to avoid leaking whether a conversationId exists. Server log captures the detail.
               Effect.catchAll((e) =>
                 pipe(
                   Ref.set(gate, 'saved'),
                   Effect.andThen(Effect.logError('Conversation persist failed', e)),
-                  Effect.as(new ConversationPersistFailed() as ConversationStreamEvent)
+                  Effect.map((): Option.Option<ConversationStreamEvent> => Option.some(new ConversationPersistFailed()))
                 )
               )
             )
-          : Effect.succeed(undefined as ConversationStreamEvent | undefined)
+          : Effect.succeed(Option.none<ConversationStreamEvent>())
       ),
       Effect.map(
-        (event): Stream.Stream<ConversationStreamEvent, ConversationError> =>
-          event ? Stream.make(event) : Stream.empty
+        Option.match({
+          onNone: (): Stream.Stream<ConversationStreamEvent, ConversationError> => Stream.empty,
+          onSome: (event): Stream.Stream<ConversationStreamEvent, ConversationError> => Stream.make(event)
+        })
       ),
       Stream.unwrap
     )
 
+    // ConversationDone is emitted before persistStream so the client can proceed immediately.
+    // If the client disconnects after Done, the stream is interrupted and persistStream won't run.
+    // The finalizer above (Effect.disconnect) guarantees a best-effort persist attempt on scope close.
     return pipe(
       startedEvents,
       Stream.concat(transcriptionEvents),

@@ -36,6 +36,10 @@ export const ConversationRepositoryLive = Layer.effect(
       saveSubsequent: (params) =>
         sql.withTransaction(
           Effect.gen(function* () {
+            // UPDATE acquires a row-level exclusive lock on the conversation row,
+            // serializing concurrent saveSubsequent calls for the same conversationId.
+            // This ensures SELECT MAX(ordinal) below sees committed inserts from prior transactions.
+            // Do not reorder: the lock must be acquired before reading ordinals.
             const updated = yield* sql`
               UPDATE conversation SET updated_at = now()
               WHERE id = ${params.conversationId} AND user_id = ${params.userId}

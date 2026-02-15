@@ -76,7 +76,7 @@ export const ConversationPayload = Schema.Struct({
   messages: Schema.Array(ConversationMessage),
   input: ConversationInput,
   tts: Schema.Boolean,
-  conversationId: Schema.optional(Schema.String)
+  conversationId: Schema.optional(Schema.UUID)
 })
 export type ConversationPayload = typeof ConversationPayload.Type
 
