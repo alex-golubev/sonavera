@@ -23,9 +23,11 @@ export default Effect.flatMap(
       id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
       conversation_id UUID NOT NULL REFERENCES conversation(id) ON DELETE CASCADE,
+      turn_id         UUID NOT NULL DEFAULT gen_random_uuid(),
       role            VARCHAR(10) NOT NULL,
       content         TEXT NOT NULL,
-      ordinal         INTEGER NOT NULL
+      ordinal         INTEGER NOT NULL,
+      UNIQUE (conversation_id, turn_id, role)
     );
 
     CREATE TABLE correction (

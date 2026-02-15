@@ -32,12 +32,28 @@ export class ConversationAudioChunk extends Schema.TaggedClass<ConversationAudio
 
 export class ConversationDone extends Schema.TaggedClass<ConversationDone>()('ConversationDone', {}) {}
 
+export class ConversationStarted extends Schema.TaggedClass<ConversationStarted>()('ConversationStarted', {
+  conversationId: Schema.String
+}) {}
+
+export class ConversationPersisted extends Schema.TaggedClass<ConversationPersisted>()('ConversationPersisted', {
+  conversationId: Schema.String
+}) {}
+
+export class ConversationPersistFailed extends Schema.TaggedClass<ConversationPersistFailed>()(
+  'ConversationPersistFailed',
+  {}
+) {}
+
 export const ConversationStreamEvent = Schema.Union(
+  ConversationStarted,
   ConversationTranscription,
   ConversationLlmChunk,
   ConversationLlmDone,
   ConversationAudioChunk,
-  ConversationDone
+  ConversationDone,
+  ConversationPersisted,
+  ConversationPersistFailed
 )
 export type ConversationStreamEvent = typeof ConversationStreamEvent.Type
 
@@ -59,7 +75,8 @@ export type ConversationInput = typeof ConversationInput.Type
 export const ConversationPayload = Schema.Struct({
   messages: Schema.Array(ConversationMessage),
   input: ConversationInput,
-  tts: Schema.Boolean
+  tts: Schema.Boolean,
+  conversationId: Schema.optional(Schema.UUID)
 })
 export type ConversationPayload = typeof ConversationPayload.Type
 

@@ -43,6 +43,8 @@ export const OpenAiLlmLive = Layer.effect(
     const client = yield* OpenAiClient
 
     return LLM.of({
+      provider: 'openai',
+      model: MODEL,
       llmStream: (messages, settings, signal) =>
         pipe(
           createCompletion(client, messages, settings, signal),
