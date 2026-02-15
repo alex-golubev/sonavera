@@ -19,6 +19,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: ls -la src/migrations/
       - run: node --import tsx src/migrate.ts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

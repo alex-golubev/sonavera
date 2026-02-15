@@ -14,9 +14,19 @@ pnpm format           # Auto-format code with Prettier
 pnpm test:unit        # Run Vitest unit tests
 pnpm test:e2e         # Run Playwright e2e tests
 pnpm test             # Run both unit and e2e tests
+pnpm migrate          # Run database migrations (requires .env)
 ```
 
 Run a single test file: `pnpm vitest run src/path/to/file.spec.ts`
+
+### Local Development Setup
+
+```bash
+docker compose up -d                    # Start PostgreSQL 17 (localhost:5432, postgres/postgres/local)
+cp .env.example .env                    # Create env file and fill in values
+pnpm migrate                            # Run migrations (uses --env-file=.env, NOT $env/dynamic/private)
+pnpm dev                                # Start dev server
+```
 
 ## Architecture
 
@@ -29,6 +39,8 @@ Run a single test file: `pnpm vitest run src/path/to/file.spec.ts`
 - **HTTP API**: Direct Effect execution in SvelteKit routes with per-feature endpoints (`/api/stt`, `/api/llm`, `/api/tts`)
 - **RPC**: `@effect/rpc` with MsgPack serialization over HTTP (`/api/rpc`) — available for future features
 - **Auth**: Better Auth with `better-auth-effect` adapter for `@effect/sql-pg`
+- **OpenAI Client**: Shared `OpenAiClient` Context.Tag (`src/lib/server/openai.ts`) wrapping the OpenAI SDK, provided as a layer to feature services
+- **CSP**: `svelte.config.js` includes `wasm-unsafe-eval` and `worker-src` directives for VAD WASM/ONNX support
 - **Environment**: Requires `OPENAI_API_KEY`, `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (see `.env.example`); use `$env/dynamic/private` for runtime secrets
 
 ### HTTP API Communication
@@ -99,9 +111,24 @@ Better Auth handles all auth endpoints via SvelteKit hook — no custom `/api/au
 - **Hook** (`src/hooks.server.ts`): `svelteKitHandler` intercepts `/api/auth/*` requests. Session is fetched and populated into `event.locals.user` / `event.locals.session` on every request
 - **DB adapter** (`better-auth-effect`): bridges Better Auth to `@effect/sql-pg` via shared `ManagedRuntime` from `src/lib/server/database.ts`
 - **Database** (`src/lib/server/database.ts`): `PgClient.layer` with `$env/dynamic/private` for SvelteKit; `src/migrate.ts` uses its own `PgClient.layerConfig` with `process.env` (runs via `--env-file=.env`). snake_case ↔ camelCase transforms configured at the PgClient level
-- **Schema**: 4 tables (`user`, `session`, `account`, `verification`) in `src/migrations/0001_create_auth_tables.ts`. ID generation delegated to PostgreSQL (`gen_random_uuid()`) via `advanced.database.generateId: false`
+- **Schema**: 4 auth tables (`user`, `session`, `account`, `verification`) in `0001_create_auth_tables.ts`. ID generation delegated to PostgreSQL (`gen_random_uuid()`) via `advanced.database.generateId: false`
 - **Route protection**: `+layout.server.ts` checks `locals.user`, redirects to `/auth/login` if null
 - **Client** (`src/lib/features/auth/client.ts`): `createAuthClient()` from `better-auth/svelte` — provides `signIn`, `signUp`, `signOut`, `useSession`
+
+### Conversation Database
+
+3 tables in `src/migrations/0002_create_conversation_tables.ts`:
+
+- **`conversation`**: tracks language pair, CEFR level, provider/model, linked to user
+- **`message`**: uses `turn_id` (UUID) to group user+assistant pairs per turn. `ordinal` (integer, unique per conversation) ensures ordering. Constraint: `UNIQUE (conversation_id, turn_id, role)` prevents duplicate messages in same turn
+- **`correction`**: grammar corrections linked to messages (category, original, correction, explanation) — future feature
+
+### Session & RPC Middleware
+
+- **`Session` Context.Tag** (`src/lib/server/session.ts`): holds authenticated user and session, provided to Effect handlers
+- **`RpcRequestSession`**: injected per-request in RPC routes from `event.locals`
+- **`AuthMiddleware`**: RPC middleware that extracts `Session` from `RpcRequestSession`, fails with `Unauthenticated` error
+- **`userSettingsFromUser`**: helper that extracts `UserSettingsValue` from the auth user with defaults
 
 ### Store Patterns
 
@@ -119,6 +146,7 @@ Stores follow a consistent pattern across features:
 - **E2E**: Playwright in `e2e/` directory, runs against production build
 - **Assertions required**: `expect.requireAssertions` is enabled globally
 - **Atom testing**: atoms without `keepAlive` or subscribers get GC'd via `queueMicrotask`. In tests without Svelte subscriptions, use `Registry.make({ scheduleTask: () => {} })` to disable node removal
+- **Database testing** (`src/lib/test/db.ts`): `TestDatabaseLive` layer (connects to local Postgres), `runMigrations` (runs all migrations), `truncateAll` (truncates user table with CASCADE). Requires local Postgres running via `docker compose up -d`
 
 ## Code Style
 
@@ -174,3 +202,9 @@ The following patterns are permitted at **external API boundaries** where strict
 - **Closure-scoped `let` for browser API wrappers** (e.g. `pcm-player.ts`): Web Audio API callbacks (`source.onended`) are synchronous and cannot return `Effect`. Mutable state scoped to a factory function (like `createPlayer`) is allowed when it manages browser API lifecycle.
 - **Closure-scoped `let` for ephemeral stream state**: function-local variables that track consumption within a single stream invocation and are reset on each new stream. Prefer atoms for state that persists across invocations.
 - **Direct `registry.set()` in external callbacks**: callbacks passed to third-party libraries (VAD `onSpeechStart`/`onSpeechEnd`), DOM event handlers (`source.onended`), and `registry.subscribe()` expect `() => void` — wrapping in `Effect.sync` + `Effect.runSync` adds noise without composability benefit. Use `Effect.sync` only when the callback is **part of an Effect pipeline** (e.g. inside `Effect.andThen`).
+
+## CI/CD
+
+- **Migrations** (`.github/workflows/migrate.yml`): auto-runs `pnpm migrate` on push to `main`
+- **Vercel Cleanup** (`.github/workflows/vercel-cleanup.yml`): weekly cleanup of old Vercel deployments
+- **Deployment**: automatic via Vercel on push to `main`
