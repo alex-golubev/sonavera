@@ -34,6 +34,7 @@ export const signIn = (registry: Registry.Registry, email: string, password: str
           ? pipe(
               Effect.sync(() => registry.set(loading, false)),
               Effect.andThen(() =>
+                // eslint-disable-next-line svelte/no-navigation-without-resolve
                 Effect.promise(() => goto(`${resolve('/auth/verify-email')}?email=${encodeURIComponent(email)}`))
               )
             )
@@ -70,9 +71,7 @@ export const signUp = (
       registry.set(loading, true)
       registry.set(error, '')
     }),
-    Effect.andThen(() =>
-      Effect.tryPromise(() => authClient.signUp.email({ ...data, callbackURL: resolve('/chat') }))
-    ),
+    Effect.andThen(() => Effect.tryPromise(() => authClient.signUp.email({ ...data, callbackURL: resolve('/chat') }))),
     Effect.andThen((result) =>
       result.error
         ? Effect.sync(() => {
@@ -82,6 +81,7 @@ export const signUp = (
         : pipe(
             Effect.sync(() => registry.set(loading, false)),
             Effect.andThen(() =>
+              // eslint-disable-next-line svelte/no-navigation-without-resolve
               Effect.promise(() => goto(`${resolve('/auth/verify-email')}?email=${encodeURIComponent(data.email)}`))
             )
           )
@@ -152,9 +152,7 @@ export const requestPasswordReset = (registry: Registry.Registry, email: string)
       registry.set(success, '')
     }),
     Effect.andThen(() =>
-      Effect.tryPromise(() =>
-        authClient.requestPasswordReset({ email, redirectTo: resolve('/auth/reset-password') })
-      )
+      Effect.tryPromise(() => authClient.requestPasswordReset({ email, redirectTo: resolve('/auth/reset-password') }))
     ),
     Effect.andThen((result) =>
       result.error
@@ -190,6 +188,7 @@ export const resetPassword = (registry: Registry.Registry, newPassword: string, 
           })
         : pipe(
             Effect.sync(() => registry.set(loading, false)),
+            // eslint-disable-next-line svelte/no-navigation-without-resolve
             Effect.andThen(() => Effect.promise(() => goto(`${resolve('/auth/login')}?reset=success`)))
           )
     ),
