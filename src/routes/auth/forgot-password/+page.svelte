@@ -2,6 +2,7 @@
   import { resolve } from '$app/paths'
   import { useAtomValue, getRegistry } from '$lib/client/effect-atom'
   import { useCooldown } from '$lib/client/use-cooldown.svelte'
+  import { Alert, AuthHeading, FormInput, PrimaryButton } from '$lib/components'
   import { Effect } from 'effect'
   import * as auth from '$lib/features/auth/store'
 
@@ -19,47 +20,22 @@
   }
 </script>
 
-<h1 class="mb-2 text-center text-2xl font-bold text-gray-900">Forgot password?</h1>
-<p class="mb-6 text-center text-sm text-gray-500">Enter your email and we'll send you a reset link</p>
+<AuthHeading title="Forgot password?" subtitle="Enter your email and we'll send you a reset link" />
 
 <form onsubmit={handleSubmit} class="space-y-4">
-  <div>
-    <label for="email" class="mb-1 block text-sm font-medium text-gray-700">Email</label>
-    <input
-      id="email"
-      type="email"
-      required
-      bind:value={email}
-      placeholder="you@example.com"
-      class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
-    />
-  </div>
+  <FormInput id="email" type="email" label="Email" bind:value={email} placeholder="you@example.com" required />
 
   {#if error()}
-    <div class="rounded-xl bg-red-50 px-4 py-3">
-      <p class="text-sm text-red-700">{error()}</p>
-    </div>
+    <Alert variant="error" message={error()} />
   {/if}
 
   {#if success()}
-    <div class="rounded-xl bg-green-50 px-4 py-3">
-      <p class="text-sm text-green-700">{success()}</p>
-    </div>
+    <Alert variant="success" message={success()} />
   {/if}
 
-  <button
-    type="submit"
-    disabled={loading() || cooldown() > 0}
-    class="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-fuchsia-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-fuchsia-500/30 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    {#if loading()}
-      <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-      </svg>
-    {/if}
+  <PrimaryButton loading={loading()} disabled={cooldown() > 0}>
     {cooldown() > 0 ? `Resend in ${cooldown()}s` : 'Send reset link'}
-  </button>
+  </PrimaryButton>
 </form>
 
 <p class="mt-6 text-center text-sm text-gray-500">

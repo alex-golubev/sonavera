@@ -2,6 +2,7 @@
   import { page } from '$app/state'
   import { resolve } from '$app/paths'
   import { useAtomValue, getRegistry } from '$lib/client/effect-atom'
+  import { Alert, AuthHeading, FormInput, PrimaryButton } from '$lib/components'
   import { Effect } from 'effect'
   import * as auth from '$lib/features/auth/store'
 
@@ -20,67 +21,40 @@
   }
 </script>
 
-<h1 class="mb-2 text-center text-2xl font-bold text-gray-900">Welcome back</h1>
-<p class="mb-6 text-center text-sm text-gray-500">Sign in to continue practicing</p>
+<AuthHeading title="Welcome back" subtitle="Sign in to continue practicing" />
 
 {#if resetSuccess}
-  <div class="mb-4 rounded-xl bg-green-50 px-4 py-3">
-    <p class="text-sm text-green-700">Password reset successfully. You can now log in with your new password.</p>
+  <div class="mb-4">
+    <Alert variant="success" message="Password reset successfully. You can now log in with your new password." />
   </div>
 {/if}
 
 <form onsubmit={handleSubmit} class="space-y-4">
-  <div>
-    <label for="email" class="mb-1 block text-sm font-medium text-gray-700">Email</label>
-    <input
-      id="email"
-      type="email"
-      required
-      bind:value={email}
-      placeholder="you@example.com"
-      class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
-    />
-  </div>
+  <FormInput id="email" type="email" label="Email" bind:value={email} placeholder="you@example.com" required />
 
-  <div>
-    <div class="mb-1 flex items-center justify-between">
-      <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-      <a
-        href={resolve('/auth/forgot-password')}
-        class="text-sm font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700"
-      >
-        Forgot password?
-      </a>
-    </div>
-    <input
-      id="password"
-      type="password"
-      required
-      bind:value={password}
-      placeholder="Enter your password"
-      class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
-    />
-  </div>
+  {#snippet forgotLink()}
+    <a
+      href={resolve('/auth/forgot-password')}
+      class="text-sm font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700"
+    >
+      Forgot password?
+    </a>
+  {/snippet}
+  <FormInput
+    id="password"
+    type="password"
+    label="Password"
+    bind:value={password}
+    placeholder="Enter your password"
+    required
+    labelAction={forgotLink}
+  />
 
   {#if error()}
-    <div class="rounded-xl bg-red-50 px-4 py-3">
-      <p class="text-sm text-red-700">{error()}</p>
-    </div>
+    <Alert variant="error" message={error()} />
   {/if}
 
-  <button
-    type="submit"
-    disabled={loading()}
-    class="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-fuchsia-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-fuchsia-500/30 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    {#if loading()}
-      <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-      </svg>
-    {/if}
-    Log in
-  </button>
+  <PrimaryButton loading={loading()}>Log in</PrimaryButton>
 </form>
 
 <p class="mt-6 text-center text-sm text-gray-500">

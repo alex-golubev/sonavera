@@ -1,5 +1,6 @@
 <script lang="ts">
   import { useAtomValue, getRegistry } from '$lib/client/effect-atom'
+  import { Alert, Avatar, IconButton, MessageBubble } from '$lib/components'
   import { Effect } from 'effect'
   import { page } from '$app/state'
   import * as auth from '$lib/features/auth/store'
@@ -57,22 +58,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-4 py-3 sm:px-6 sm:py-4">
       <div class="flex items-center gap-3">
-        <div class="relative">
-          <div
-            class="flex h-11 w-11 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-fuchsia-500"
-          >
-            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-              />
-            </svg>
-          </div>
-          <div
-            class="absolute -right-0.5 -bottom-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-green-500"
-          ></div>
-        </div>
+        <Avatar type="ai" size="md" online />
         <div>
           <p class="font-semibold text-gray-900">Emma</p>
           <p class="text-sm text-gray-500">AI Tutor · {languageName(targetLanguage())}</p>
@@ -81,12 +67,7 @@
 
       <div class="flex items-center gap-2">
         <!-- TTS Mute Toggle -->
-        <button
-          type="button"
-          aria-label={isMuted() ? 'Unmute' : 'Mute'}
-          onclick={handleMuteToggle}
-          class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-        >
+        <IconButton label={isMuted() ? 'Unmute' : 'Mute'} onclick={handleMuteToggle}>
           {#if currentPhase() === 'speaking'}
             <svg class="h-4 w-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path
@@ -112,14 +93,9 @@
               />
             </svg>
           {/if}
-        </button>
+        </IconButton>
 
-        <button
-          type="button"
-          aria-label="Sign out"
-          onclick={handleSignOut}
-          class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-        >
+        <IconButton label="Sign out" onclick={handleSignOut}>
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path
               stroke-linecap="round"
@@ -127,7 +103,7 @@
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
             />
           </svg>
-        </button>
+        </IconButton>
       </div>
     </div>
 
@@ -136,72 +112,36 @@
       {#each msgs() as msg, i (i)}
         {#if msg.role === 'assistant'}
           <div class="flex gap-3">
-            <div
-              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-100 to-fuchsia-100"
-            >
-              <svg
-                class="h-4 w-4 text-indigo-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-            </div>
+            <Avatar type="ai" />
             <div class="max-w-[75%]">
-              <div class="rounded-2xl rounded-tl-none bg-gray-100 px-4 py-3">
-                <p dir="auto" class="text-sm text-gray-700">{msg.content}</p>
-              </div>
+              <MessageBubble role="assistant" content={msg.content} />
             </div>
           </div>
         {:else}
           <div class="flex justify-end gap-3">
             <div class="max-w-[75%]">
-              <div class="rounded-2xl rounded-tr-none bg-linear-to-r from-indigo-600 to-fuchsia-600 px-4 py-3">
-                <p dir="auto" class="text-sm text-white">{msg.content}</p>
-              </div>
+              <MessageBubble role="user" content={msg.content} />
             </div>
-            <div
-              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-amber-100 to-orange-100"
-            >
-              <span class="text-sm font-medium text-amber-700">Me</span>
-            </div>
+            <Avatar type="user" />
           </div>
         {/if}
       {/each}
 
       {#if streaming()}
         <div class="flex gap-3">
-          <div
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-100 to-fuchsia-100"
-          >
-            <svg class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-              />
-            </svg>
-          </div>
+          <Avatar type="ai" />
           <div class="max-w-[75%]">
-            <div class="rounded-2xl rounded-tl-none bg-gray-100 px-4 py-3">
+            <MessageBubble role="assistant">
               <p dir="auto" class="text-sm text-gray-700">
                 {streaming()}<span class="ml-0.5 inline-block h-4 w-1 animate-pulse bg-gray-400"></span>
               </p>
-            </div>
+            </MessageBubble>
           </div>
         </div>
       {/if}
 
       {#if currentError()}
-        <div class="rounded-xl bg-red-50 px-4 py-3">
-          <p class="text-sm text-red-700">{currentError()}</p>
-        </div>
+        <Alert variant="error" message={currentError()} />
       {/if}
     </div>
 

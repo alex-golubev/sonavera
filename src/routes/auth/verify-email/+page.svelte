@@ -3,6 +3,7 @@
   import { resolve } from '$app/paths'
   import { useAtomValue, getRegistry } from '$lib/client/effect-atom'
   import { useCooldown } from '$lib/client/use-cooldown.svelte'
+  import { Alert, PrimaryButton } from '$lib/components'
   import { Effect } from 'effect'
   import * as auth from '$lib/features/auth/store'
 
@@ -41,31 +42,21 @@
   </p>
 
   {#if error()}
-    <div class="mb-4 rounded-xl bg-red-50 px-4 py-3">
-      <p class="text-sm text-red-700">{error()}</p>
+    <div class="mb-4">
+      <Alert variant="error" message={error()} />
     </div>
   {/if}
 
   {#if success()}
-    <div class="mb-4 rounded-xl bg-green-50 px-4 py-3">
-      <p class="text-sm text-green-700">{success()}</p>
+    <div class="mb-4">
+      <Alert variant="success" message={success()} />
     </div>
   {/if}
 
   {#if email}
-    <button
-      onclick={handleResend}
-      disabled={loading() || cooldown() > 0}
-      class="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-fuchsia-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-fuchsia-500/30 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {#if loading()}
-        <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-      {/if}
+    <PrimaryButton type="button" loading={loading()} disabled={cooldown() > 0} onclick={handleResend}>
       {cooldown() > 0 ? `Resend in ${cooldown()}s` : 'Resend verification email'}
-    </button>
+    </PrimaryButton>
   {/if}
 </div>
 
