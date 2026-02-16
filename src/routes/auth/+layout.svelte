@@ -1,7 +1,17 @@
 <script lang="ts">
+  import { afterNavigate } from '$app/navigation'
   import { resolve } from '$app/paths'
+  import { getRegistry } from '$lib/client/effect-atom'
+  import { Effect } from 'effect'
+  import * as auth from '$lib/features/auth/store'
 
   let { children } = $props()
+
+  const registry = getRegistry()
+
+  afterNavigate(() => {
+    Effect.runSync(auth.resetFormState(registry))
+  })
 </script>
 
 <div class="flex min-h-dvh flex-col items-center justify-center bg-linear-to-b from-slate-50 to-white px-4 py-8">

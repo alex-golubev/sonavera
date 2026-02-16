@@ -1,33 +1,26 @@
 <script lang="ts">
-  import { page } from '$app/state'
   import { resolve } from '$app/paths'
   import { useAtomValue, getRegistry } from '$lib/client/effect-atom'
+  import { useCooldown } from '$lib/client/use-cooldown.svelte'
   import { Effect } from 'effect'
   import * as auth from '$lib/features/auth/store'
 
   const registry = getRegistry()
   const loading = useAtomValue(auth.loading)
   const error = useAtomValue(auth.error)
-
-  const resetSuccess = page.url.searchParams.get('reset') === 'success'
+  const success = useAtomValue(auth.success)
+  const cooldown = useCooldown(success)
 
   let email = $state('')
-  let password = $state('')
 
   const handleSubmit = (e: SubmitEvent) => {
     e.preventDefault()
-    Effect.runPromise(auth.signIn(registry, email, password))
+    Effect.runPromise(auth.requestPasswordReset(registry, email))
   }
 </script>
 
-<h1 class="mb-2 text-center text-2xl font-bold text-gray-900">Welcome back</h1>
-<p class="mb-6 text-center text-sm text-gray-500">Sign in to continue practicing</p>
-
-{#if resetSuccess}
-  <div class="mb-4 rounded-xl bg-green-50 px-4 py-3">
-    <p class="text-sm text-green-700">Password reset successfully. You can now log in with your new password.</p>
-  </div>
-{/if}
+<h1 class="mb-2 text-center text-2xl font-bold text-gray-900">Forgot password?</h1>
+<p class="mb-6 text-center text-sm text-gray-500">Enter your email and we'll send you a reset link</p>
 
 <form onsubmit={handleSubmit} class="space-y-4">
   <div>
@@ -42,35 +35,21 @@
     />
   </div>
 
-  <div>
-    <div class="mb-1 flex items-center justify-between">
-      <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-      <a
-        href={resolve('/auth/forgot-password')}
-        class="text-sm font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700"
-      >
-        Forgot password?
-      </a>
-    </div>
-    <input
-      id="password"
-      type="password"
-      required
-      bind:value={password}
-      placeholder="Enter your password"
-      class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
-    />
-  </div>
-
   {#if error()}
     <div class="rounded-xl bg-red-50 px-4 py-3">
       <p class="text-sm text-red-700">{error()}</p>
     </div>
   {/if}
 
+  {#if success()}
+    <div class="rounded-xl bg-green-50 px-4 py-3">
+      <p class="text-sm text-green-700">{success()}</p>
+    </div>
+  {/if}
+
   <button
     type="submit"
-    disabled={loading()}
+    disabled={loading() || cooldown() > 0}
     class="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-fuchsia-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-fuchsia-500/30 disabled:cursor-not-allowed disabled:opacity-50"
   >
     {#if loading()}
@@ -79,13 +58,13 @@
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
       </svg>
     {/if}
-    Log in
+    {cooldown() > 0 ? `Resend in ${cooldown()}s` : 'Send reset link'}
   </button>
 </form>
 
 <p class="mt-6 text-center text-sm text-gray-500">
-  Don't have an account?
-  <a href={resolve('/auth/register')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700">
-    Sign up
+  Remember your password?
+  <a href={resolve('/auth/login')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700">
+    Log in
   </a>
 </p>
