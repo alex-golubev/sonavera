@@ -1,6 +1,8 @@
 import { betterAuth } from 'better-auth'
 import { effectSqlAdapter } from 'better-auth-effect'
 import { dbRuntime } from '$lib/server/database'
+import { sendEmail } from '$lib/server/email'
+import { verificationEmail, resetPasswordEmail } from '$lib/server/email-templates'
 import { env } from '$env/dynamic/private'
 import { DEFAULT_NATIVE_LANGUAGE, DEFAULT_TARGET_LANGUAGE } from '$lib/features/language/schema'
 import { DEFAULT_LEVEL } from '$lib/features/level/schema'
@@ -21,7 +23,20 @@ export const auth = betterAuth({
     dialect: 'pg'
   }),
   emailAndPassword: {
-    enabled: true
+    enabled: true,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      const { subject, html } = resetPasswordEmail(user.name, url)
+      await sendEmail(user.email, subject, html)
+    }
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      const { subject, html } = verificationEmail(user.name, url)
+      await sendEmail(user.email, subject, html)
+    }
   },
   session: {
     cookieCache: {

@@ -38,7 +38,7 @@
     "prettier": "^3.8.1",
     "prettier-plugin-svelte": "^3.4.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "svelte": "^5.51.1",
+    "svelte": "^5.51.2",
     "svelte-check": "^4.4.0",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
@@ -58,8 +58,9 @@
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^1.3.1",
     "better-auth": "^1.4.18",
-    "better-auth-effect": "^0.3.2",
+    "better-auth-effect": "^0.3.3",
     "effect": "^3.19.17",
-    "openai": "^6.22.0"
+    "openai": "^6.22.0",
+    "resend": "^6.9.2"
   }
 }
