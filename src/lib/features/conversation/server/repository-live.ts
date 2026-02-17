@@ -8,8 +8,10 @@ const insertCorrections = (
   userMessageId: string,
   corrections: ReadonlyArray<CorrectionItem>
 ) =>
-  Effect.forEach(corrections, (c) =>
-    sql`
+  Effect.forEach(
+    corrections,
+    (c) =>
+      sql`
       INSERT INTO correction (message_id, category, original, correction, explanation)
       VALUES (${userMessageId}, ${c.category}, ${c.original}, ${c.correction}, ${c.explanation})
     `

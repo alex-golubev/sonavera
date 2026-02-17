@@ -224,9 +224,7 @@ const buildEventStream = (
                 pipe(
                   Ref.set(gate, 'saved'),
                   Effect.andThen(Effect.logError('Conversation persist failed', e)),
-                  Effect.map(
-                    (): Stream.Stream<ConversationStreamEvent> => Stream.make(new ConversationPersistFailed())
-                  )
+                  Effect.map((): Stream.Stream<ConversationStreamEvent> => Stream.make(new ConversationPersistFailed()))
                 )
               )
             )

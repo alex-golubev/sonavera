@@ -53,10 +53,9 @@ export class ConversationPersisted extends Schema.TaggedClass<ConversationPersis
   conversationId: Schema.String
 }) {}
 
-export class ConversationCorrections extends Schema.TaggedClass<ConversationCorrections>()(
-  'ConversationCorrections',
-  { corrections: Schema.Array(CorrectionItem) }
-) {}
+export class ConversationCorrections extends Schema.TaggedClass<ConversationCorrections>()('ConversationCorrections', {
+  corrections: Schema.Array(CorrectionItem)
+}) {}
 
 export class ConversationPersistFailed extends Schema.TaggedClass<ConversationPersistFailed>()(
   'ConversationPersistFailed',
