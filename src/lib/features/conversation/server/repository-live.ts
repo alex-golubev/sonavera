@@ -1,6 +1,19 @@
 import { SqlClient } from '@effect/sql'
 import { Effect, Layer } from 'effect'
+import type { CorrectionItem } from '../schema'
 import { ConversationAccessDenied, ConversationRepository } from './repository'
+
+const insertCorrections = (
+  sql: SqlClient.SqlClient,
+  userMessageId: string,
+  corrections: ReadonlyArray<CorrectionItem>
+) =>
+  Effect.forEach(corrections, (c) =>
+    sql`
+      INSERT INTO correction (message_id, category, original, correction, explanation)
+      VALUES (${userMessageId}, ${c.category}, ${c.original}, ${c.correction}, ${c.explanation})
+    `
+  )
 
 export const ConversationRepositoryLive = Layer.effect(
   ConversationRepository,
@@ -17,10 +30,11 @@ export const ConversationRepositoryLive = Layer.effect(
               ON CONFLICT (id) DO NOTHING
             `
 
-            yield* sql`
+            const [userMsg] = yield* sql<{ id: string }>`
               INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
               VALUES (${params.conversationId}, ${params.turnId}, 'user', ${params.userText}, 0)
-              ON CONFLICT (conversation_id, turn_id, role) DO NOTHING
+              ON CONFLICT (conversation_id, turn_id, role) DO UPDATE SET content = EXCLUDED.content
+              RETURNING id
             `
 
             yield* sql`
@@ -28,6 +42,8 @@ export const ConversationRepositoryLive = Layer.effect(
               VALUES (${params.conversationId}, ${params.turnId}, 'assistant', ${params.assistantText}, 1)
               ON CONFLICT (conversation_id, turn_id, role) DO NOTHING
             `
+
+            yield* insertCorrections(sql, userMsg.id, params.corrections)
 
             return { conversationId: params.conversationId }
           })
@@ -56,10 +72,11 @@ export const ConversationRepositoryLive = Layer.effect(
               WHERE conversation_id = ${params.conversationId}
             `
 
-            yield* sql`
+            const [userMsg] = yield* sql<{ id: string }>`
               INSERT INTO message (conversation_id, turn_id, role, content, ordinal)
               VALUES (${params.conversationId}, ${params.turnId}, 'user', ${params.userText}, ${nextOrdinal})
-              ON CONFLICT (conversation_id, turn_id, role) DO NOTHING
+              ON CONFLICT (conversation_id, turn_id, role) DO UPDATE SET content = EXCLUDED.content
+              RETURNING id
             `
 
             yield* sql`
@@ -67,6 +84,8 @@ export const ConversationRepositoryLive = Layer.effect(
               VALUES (${params.conversationId}, ${params.turnId}, 'assistant', ${params.assistantText}, ${nextOrdinal + 1})
               ON CONFLICT (conversation_id, turn_id, role) DO NOTHING
             `
+
+            yield* insertCorrections(sql, userMsg.id, params.corrections)
 
             return { conversationId: params.conversationId }
           })

@@ -1,5 +1,6 @@
 import { Context, Data, Effect } from 'effect'
 import type { SqlError } from '@effect/sql/SqlError'
+import type { CorrectionItem } from '../schema'
 
 export class ConversationAccessDenied extends Data.TaggedError('ConversationAccessDenied')<{
   readonly conversationId: string
@@ -19,6 +20,7 @@ export class ConversationRepository extends Context.Tag('ConversationRepository'
       readonly turnId: string
       readonly userText: string
       readonly assistantText: string
+      readonly corrections: ReadonlyArray<CorrectionItem>
     }) => Effect.Effect<{ readonly conversationId: string }, SqlError>
 
     readonly saveSubsequent: (params: {
@@ -27,6 +29,7 @@ export class ConversationRepository extends Context.Tag('ConversationRepository'
       readonly turnId: string
       readonly userText: string
       readonly assistantText: string
+      readonly corrections: ReadonlyArray<CorrectionItem>
     }) => Effect.Effect<{ readonly conversationId: string }, SqlError | ConversationAccessDenied>
   }
 >() {}

@@ -32,7 +32,8 @@ const createConversation = Effect.gen(function* () {
     model: 'gpt-4.1-mini',
     turnId: '00000000-0000-0000-0000-000000000100',
     userText: 'Hello',
-    assistantText: 'Hola'
+    assistantText: 'Hola',
+    corrections: []
   })
 })
 
@@ -71,14 +72,16 @@ describe('ConversationRepository', () => {
               conversationId: CONVERSATION_ID,
               turnId: '00000000-0000-0000-0000-000000000101',
               userText: 'How are you?',
-              assistantText: '¿Cómo estás?'
+              assistantText: '¿Cómo estás?',
+              corrections: []
             }),
             repo.saveSubsequent({
               userId: TEST_USER_ID,
               conversationId: CONVERSATION_ID,
               turnId: '00000000-0000-0000-0000-000000000102',
               userText: 'Good morning',
-              assistantText: 'Buenos días'
+              assistantText: 'Buenos días',
+              corrections: []
             })
           ],
           { concurrency: 'unbounded' }
@@ -145,7 +148,8 @@ describe('ConversationRepository', () => {
           conversationId: CONVERSATION_ID,
           turnId: '00000000-0000-0000-0000-000000000103',
           userText: 'Good evening',
-          assistantText: 'Buenas noches'
+          assistantText: 'Buenas noches',
+          corrections: []
         })
 
         yield* Fiber.join(t1)

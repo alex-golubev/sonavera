@@ -2,7 +2,7 @@ import { Atom } from '$lib/client/effect-atom'
 import type { MicVAD } from '@ricky0123/vad-web'
 import type { Fiber } from 'effect'
 import type { PCMPlayer } from './pcm-player'
-import type { ConversationMessage } from './schema'
+import type { ConversationMessage, CorrectionItem } from './schema'
 
 // --- Mic / VAD ---
 
@@ -21,6 +21,10 @@ export const transcription = Atom.make('')
 
 export const messages = Atom.make<ReadonlyArray<ConversationMessage>>([])
 export const streamingText = Atom.make('')
+
+// --- Corrections ---
+
+export const corrections = Atom.make<ReadonlyMap<number, ReadonlyArray<CorrectionItem>>>(new Map())
 
 // --- Audio playback ---
 

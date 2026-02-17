@@ -1,5 +1,18 @@
 import { Schema } from 'effect'
 
+// --- Corrections ---
+
+export const CorrectionCategory = Schema.Literal('grammar', 'vocabulary', 'spelling', 'word_order', 'conjugation')
+export type CorrectionCategory = typeof CorrectionCategory.Type
+
+export const CorrectionItem = Schema.Struct({
+  category: CorrectionCategory,
+  original: Schema.String,
+  correction: Schema.String,
+  explanation: Schema.String
+})
+export type CorrectionItem = typeof CorrectionItem.Type
+
 // --- Messages ---
 
 export const ConversationRole = Schema.Literal('user', 'assistant')
@@ -40,6 +53,11 @@ export class ConversationPersisted extends Schema.TaggedClass<ConversationPersis
   conversationId: Schema.String
 }) {}
 
+export class ConversationCorrections extends Schema.TaggedClass<ConversationCorrections>()(
+  'ConversationCorrections',
+  { corrections: Schema.Array(CorrectionItem) }
+) {}
+
 export class ConversationPersistFailed extends Schema.TaggedClass<ConversationPersistFailed>()(
   'ConversationPersistFailed',
   {}
@@ -50,6 +68,7 @@ export const ConversationStreamEvent = Schema.Union(
   ConversationTranscription,
   ConversationLlmChunk,
   ConversationLlmDone,
+  ConversationCorrections,
   ConversationAudioChunk,
   ConversationDone,
   ConversationPersisted,

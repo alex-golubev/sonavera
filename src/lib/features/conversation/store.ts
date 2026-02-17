@@ -5,6 +5,7 @@ import { clientRuntime } from '$lib/client/runtime'
 import { Effect, Fiber, Match, Option, Stream, pipe } from 'effect'
 import {
   conversationId,
+  corrections,
   error,
   fiberRef,
   listening,
@@ -70,6 +71,13 @@ const processEvent = (registry: Registry.Registry) => (event: ConversationStream
       Effect.sync(() => {
         registry.set(messages, [...registry.get(messages), { role: 'assistant' as const, content: e.text }])
         registry.set(streamingText, '')
+      })
+    ),
+    Match.tag('ConversationCorrections', (e) =>
+      Effect.sync(() => {
+        const userMsgIndex = registry.get(messages).length - 1
+        const current = registry.get(corrections)
+        registry.set(corrections, new Map([...current, [userMsgIndex, e.corrections]]))
       })
     ),
     Match.tag('ConversationAudioChunk', (e) =>
@@ -152,6 +160,7 @@ const startPipeline = (registry: Registry.Registry, input: ConversationAudioInpu
           stopPlayer(registry)
           registry.set(streamingText, '')
           registry.set(transcription, '')
+          registry.set(corrections, new Map())
           registry.set(error, '')
           registry.set(persistFailed, false)
           registry.set(phase, 'transcribing')
@@ -231,6 +240,7 @@ export const destroy = (registry: Registry.Registry) =>
     // Reset state
     registry.set(conversationId, undefined)
     registry.set(persistFailed, false)
+    registry.set(corrections, new Map())
     registry.set(messages, [])
     registry.set(streamingText, '')
     registry.set(transcription, '')
@@ -241,6 +251,7 @@ export const destroy = (registry: Registry.Registry) =>
 // Re-export atoms for UI consumption
 export {
   conversationId,
+  corrections,
   error,
   initializing,
   listening,

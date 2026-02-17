@@ -23,6 +23,9 @@
   const streaming = useAtomValue(conversation.streamingText)
   const isMuted = useAtomValue(conversation.muted)
   const currentError = useAtomValue(conversation.error)
+  const correctionMap = useAtomValue(conversation.corrections)
+
+  const correctionsFor = (index: number) => correctionMap().get(index) ?? []
 
   // --- Local state ---
   let messagesEl: HTMLDivElement | undefined = $state(undefined)
@@ -121,6 +124,23 @@
           <div class="flex justify-end gap-3">
             <div class="max-w-[75%]">
               <MessageBubble role="user" content={msg.content} />
+              {#if correctionsFor(i).length > 0}
+                <div class="mt-1.5 space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+                  {#each correctionsFor(i) as c, ci (ci)}
+                    <div class="space-y-0.5">
+                      <div class="flex items-center gap-1.5">
+                        <span class="rounded-full bg-amber-200/70 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
+                          >{c.category.replace('_', ' ')}</span
+                        >
+                        <span class="text-xs text-red-400 line-through">{c.original}</span>
+                        <span class="text-xs text-gray-400">&rarr;</span>
+                        <span class="text-xs font-medium text-green-700">{c.correction}</span>
+                      </div>
+                      <p class="text-[11px] leading-tight text-gray-500">{c.explanation}</p>
+                    </div>
+                  {/each}
+                </div>
+              {/if}
             </div>
             <Avatar type="user" />
           </div>

@@ -1,13 +1,13 @@
-import { Effect, Duration, Match, Option, Ref, Stream, pipe } from 'effect'
+import { Effect, Duration, Match, Ref, Stream, pipe } from 'effect'
 import type { SqlError } from '@effect/sql/SqlError'
 import { Session, userSettingsFromUser } from '$lib/server/session'
 import type { UserSettingsValue } from '$lib/server/user-settings'
-import type { STT } from './stt'
 import type { LLM } from './llm'
 import type { TTS } from './tts'
 import type { ConversationRepository } from './repository'
 import {
   ConversationAudioChunk,
+  ConversationCorrections,
   ConversationDone,
   ConversationError,
   ConversationLlmChunk,
@@ -17,8 +17,10 @@ import {
   ConversationStarted,
   ConversationTranscription,
   type ConversationPayload,
-  type ConversationStreamEvent
+  type ConversationStreamEvent,
+  type CorrectionItem
 } from '../schema'
+import type { STT } from './stt'
 
 const pgErrorCode = (e: SqlError): string | undefined => {
   const cause = e.cause
@@ -90,6 +92,7 @@ const buildEventStream = (
   Effect.gen(function* () {
     const messages = [...payload.messages.slice(-MAX_CONTEXT_MESSAGES), { role: 'user' as const, content: userText }]
     const ref = yield* Ref.make('')
+    const correctionsRef = yield* Ref.make<ReadonlyArray<CorrectionItem>>([])
 
     // Pre-generated IDs
     const convId = payload.conversationId ?? crypto.randomUUID()
@@ -102,15 +105,16 @@ const buildEventStream = (
 
     // Pure save operation (no state management)
     const saveToDB = pipe(
-      Ref.get(ref),
-      Effect.flatMap((assistantText) =>
+      Effect.all({ assistantText: Ref.get(ref), corrections: Ref.get(correctionsRef) }),
+      Effect.flatMap(({ assistantText, corrections }) =>
         payload.conversationId
           ? repo.saveSubsequent({
               userId,
               conversationId: payload.conversationId,
               turnId,
               userText,
-              assistantText
+              assistantText,
+              corrections
             })
           : repo.saveFirst({
               conversationId: convId,
@@ -122,7 +126,8 @@ const buildEventStream = (
               provider: llm.provider,
               model: llm.model,
               userText,
-              assistantText
+              assistantText,
+              corrections
             })
       ),
       Effect.retry({ times: 2, while: (e) => e._tag === 'SqlError' && isTransient(e as SqlError) }),
@@ -163,8 +168,24 @@ const buildEventStream = (
 
     const llmEvents: Stream.Stream<ConversationStreamEvent, ConversationError> = pipe(
       llm.llmStream(messages, settings, signal),
-      Stream.tap((delta) => Ref.update(ref, (acc) => acc + delta)),
-      Stream.map((delta) => new ConversationLlmChunk({ text: delta }))
+      Stream.mapEffect((delta) =>
+        pipe(
+          Match.value(delta),
+          Match.tag('LlmContentDelta', (d) =>
+            pipe(
+              Ref.update(ref, (acc) => acc + d.text),
+              Effect.as<ConversationStreamEvent>(new ConversationLlmChunk({ text: d.text }))
+            )
+          ),
+          Match.tag('LlmCorrections', (d) =>
+            pipe(
+              Ref.set(correctionsRef, d.corrections),
+              Effect.as<ConversationStreamEvent>(new ConversationCorrections({ corrections: d.corrections }))
+            )
+          ),
+          Match.exhaustive
+        )
+      )
     )
 
     const llmDoneAndTts: Stream.Stream<ConversationStreamEvent, ConversationError> = pipe(
@@ -194,8 +215,8 @@ const buildEventStream = (
               saveToDB,
               Effect.tap(() => Ref.set(gate, 'saved')),
               Effect.map(
-                (result): Option.Option<ConversationStreamEvent> =>
-                  Option.some(new ConversationPersisted({ conversationId: result.conversationId }))
+                (result): Stream.Stream<ConversationStreamEvent> =>
+                  Stream.make(new ConversationPersisted({ conversationId: result.conversationId }))
               ),
               // catchAll intentionally generalizes all errors (including ConversationAccessDenied)
               // to avoid leaking whether a conversationId exists. Server log captures the detail.
@@ -203,17 +224,13 @@ const buildEventStream = (
                 pipe(
                   Ref.set(gate, 'saved'),
                   Effect.andThen(Effect.logError('Conversation persist failed', e)),
-                  Effect.map((): Option.Option<ConversationStreamEvent> => Option.some(new ConversationPersistFailed()))
+                  Effect.map(
+                    (): Stream.Stream<ConversationStreamEvent> => Stream.make(new ConversationPersistFailed())
+                  )
                 )
               )
             )
-          : Effect.succeed(Option.none<ConversationStreamEvent>())
-      ),
-      Effect.map(
-        Option.match({
-          onNone: (): Stream.Stream<ConversationStreamEvent, ConversationError> => Stream.empty,
-          onSome: (event): Stream.Stream<ConversationStreamEvent, ConversationError> => Stream.make(event)
-        })
+          : Effect.succeed(Stream.empty)
       ),
       Stream.unwrap
     )

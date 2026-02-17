@@ -6,31 +6,32 @@ const levelInstructions: Record<Level, string> = {
   A1: [
     'Use only the most basic vocabulary and very short, simple sentences.',
     'Present tense only. No idioms, slang, or complex grammar.',
-    "If the user makes an error, don't lecture — just naturally rephrase their idea correctly and move on."
+    'If the user makes an error, use the report_corrections tool to log it. Do NOT correct errors in your reply text — respond naturally as if the user spoke correctly.'
   ].join(' '),
   A2: [
     'Use simple everyday vocabulary and short sentences.',
     'Basic past and future tenses are fine. Avoid idioms and abstract concepts.',
-    'If the user makes an error, naturally rephrase their idea correctly and keep going.'
+    'If the user makes an error, use the report_corrections tool to log it. Do NOT correct errors in your reply text.'
   ].join(' '),
   B1: [
     'Use common vocabulary with moderate sentence complexity.',
     'Connectors, varied structures, and some new vocabulary with context clues are welcome.',
-    'If the user makes an error, rephrase naturally. No explicit grammar corrections.'
+    'If the user makes an error, use the report_corrections tool to log it. Do NOT mention or correct errors in your reply text.'
   ].join(' '),
   B2: [
     'Use varied vocabulary and complex sentence structures.',
     'Idiomatic expressions are welcome — weave them in naturally.',
-    "If the user makes an error, rephrase it correctly in your reply. Only point out grammar explicitly if it's a recurring mistake."
+    'If the user makes an error, use the report_corrections tool to log it. Do NOT correct errors in your reply text.'
   ].join(' '),
   C1: [
     'Use advanced vocabulary, idioms, and nuanced language freely.',
     'Subtle humor, cultural references, and implicit meaning are encouraged.',
-    'Only correct errors that affect meaning or register.'
+    'Only report errors that affect meaning or register via the report_corrections tool. Do NOT correct in your reply text.'
   ].join(' '),
   C2: [
     'Use native-level complexity — idiomatic expressions, wordplay, cultural references, rhetorical techniques.',
-    'Communicate as you would with a native speaker. No simplification.'
+    'Communicate as you would with a native speaker. No simplification.',
+    'Only report significant errors via the report_corrections tool if any. Do NOT correct in your reply text.'
   ].join(' ')
 }
 
@@ -58,6 +59,11 @@ export const systemPrompt = (settings: UserSettingsValue): string => {
     `The user's native language is ${native}. Their level is CEFR ${settings.level}.`,
     levelInstructions[settings.level],
     `Always respond in ${target}.`,
+
+    // Corrections via tool
+    'When the user makes language errors, use the report_corrections tool to report them separately. Your conversational reply should NOT include corrections — respond as if the user spoke correctly. The corrections will be shown to the user separately.',
+    `Write the explanation field in ${native}.`,
+    'Only report genuine errors — do not flag stylistic choices, informal but correct usage, or minor punctuation.',
 
     // Explanations in native language
     `When the user asks what something means, or clearly doesn't understand a word or phrase, explain it in ${native} — briefly, in one sentence — then continue the conversation in ${target}.`,
