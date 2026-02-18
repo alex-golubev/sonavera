@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { effectSqlAdapter } from 'better-auth-effect'
+import { Effect } from 'effect'
 import { dbRuntime } from '$lib/server/database'
 import { sendEmail } from '$lib/server/email'
 import { verificationEmail, resetPasswordEmail } from '$lib/server/email-templates'
@@ -25,17 +26,18 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
-    sendResetPassword: async ({ user, url }) => {
+    sendResetPassword: ({ user, url }) => {
       const { subject, html } = resetPasswordEmail(user.name, url)
-      await sendEmail(user.email, subject, html)
+      return Effect.runPromise(sendEmail(user.email, subject, html))
     }
   },
   emailVerification: {
     sendOnSignUp: true,
+    sendOnSignIn: true,
     autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url }) => {
+    sendVerificationEmail: ({ user, url }) => {
       const { subject, html } = verificationEmail(user.name, url)
-      await sendEmail(user.email, subject, html)
+      return Effect.runPromise(sendEmail(user.email, subject, html))
     }
   },
   session: {

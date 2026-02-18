@@ -27,7 +27,7 @@ export const signIn = (registry: Registry.Registry, email: string, password: str
       registry.set(loading, true)
       registry.set(error, '')
     }),
-    Effect.andThen(() => Effect.tryPromise(() => authClient.signIn.email({ email, password }))),
+    Effect.andThen(() => Effect.tryPromise(() => authClient.signIn.email({ email, password, callbackURL: resolve('/chat') }))),
     Effect.andThen((result) =>
       result.error
         ? result.error.code === 'EMAIL_NOT_VERIFIED'
