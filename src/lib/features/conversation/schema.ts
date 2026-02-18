@@ -19,10 +19,29 @@ export const ConversationRole = Schema.Literal('user', 'assistant')
 export type ConversationRole = typeof ConversationRole.Type
 
 export const ConversationMessage = Schema.Struct({
+  id: Schema.optional(Schema.String),
   role: ConversationRole,
   content: Schema.String
 })
 export type ConversationMessage = typeof ConversationMessage.Type
+
+// --- Persisted data (DB → client sync) ---
+
+export const PersistedMessage = Schema.Struct({
+  id: Schema.String,
+  role: ConversationRole,
+  content: Schema.String
+})
+export type PersistedMessage = typeof PersistedMessage.Type
+
+export const PersistedCorrection = Schema.Struct({
+  messageId: Schema.String,
+  category: CorrectionCategory,
+  original: Schema.String,
+  correction: Schema.String,
+  explanation: Schema.String
+})
+export type PersistedCorrection = typeof PersistedCorrection.Type
 
 // --- Stream events (server → client) ---
 
@@ -50,7 +69,9 @@ export class ConversationStarted extends Schema.TaggedClass<ConversationStarted>
 }) {}
 
 export class ConversationPersisted extends Schema.TaggedClass<ConversationPersisted>()('ConversationPersisted', {
-  conversationId: Schema.String
+  conversationId: Schema.String,
+  messages: Schema.Array(PersistedMessage),
+  corrections: Schema.Array(PersistedCorrection)
 }) {}
 
 export class ConversationCorrections extends Schema.TaggedClass<ConversationCorrections>()('ConversationCorrections', {

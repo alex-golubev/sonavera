@@ -24,7 +24,8 @@ export const streamingText = Atom.make('')
 
 // --- Corrections ---
 
-export const corrections = Atom.make<ReadonlyMap<number, ReadonlyArray<CorrectionItem>>>(new Map())
+export const corrections = Atom.make<ReadonlyMap<string, ReadonlyArray<CorrectionItem>>>(new Map())
+export const pendingCorrections = Atom.make<ReadonlyMap<number, ReadonlyArray<CorrectionItem>>>(new Map())
 
 // --- Audio playback ---
 

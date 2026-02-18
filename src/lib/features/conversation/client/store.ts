@@ -2,6 +2,8 @@ import { RpcClient } from '@effect/rpc'
 import { type Registry } from '$lib/client/effect-atom'
 import { ProtocolLive } from '$lib/client/protocol'
 import { clientRuntime } from '$lib/client/runtime'
+import { replaceState } from '$app/navigation'
+import { resolve } from '$app/paths'
 import { Effect, Fiber, Match, Option, Stream, pipe } from 'effect'
 import {
   conversationId,
@@ -11,6 +13,7 @@ import {
   listening,
   messages,
   muted,
+  pendingCorrections,
   persistFailed,
   phase,
   playerRef,
@@ -22,7 +25,7 @@ import {
 } from './atoms'
 import { createPlayer, pcmConfig } from './pcm-player'
 import { ConversationRpc } from '../rpc'
-import { ConversationAudioInput, type ConversationStreamEvent } from '../schema'
+import { ConversationAudioInput, type ConversationStreamEvent, type CorrectionItem } from '../schema'
 import { createVad, toggleVad } from './vad'
 
 // --- PCM player helpers ---
@@ -76,8 +79,8 @@ const processEvent = (registry: Registry.Registry) => (event: ConversationStream
     Match.tag('ConversationCorrections', (e) =>
       Effect.sync(() => {
         const userMsgIndex = registry.get(messages).length - 1
-        const current = registry.get(corrections)
-        registry.set(corrections, new Map([...current, [userMsgIndex, e.corrections]]))
+        const current = registry.get(pendingCorrections)
+        registry.set(pendingCorrections, new Map([...current, [userMsgIndex, e.corrections]]))
       })
     ),
     Match.tag('ConversationAudioChunk', (e) =>
@@ -102,12 +105,33 @@ const processEvent = (registry: Registry.Registry) => (event: ConversationStream
     Match.tag('ConversationStarted', (e) =>
       Effect.sync(() => {
         registry.set(conversationId, e.conversationId)
+        replaceState(resolve(`/chat/${e.conversationId}`), {})
       })
     ),
     Match.tag('ConversationPersisted', (e) =>
       Effect.sync(() => {
         registry.set(conversationId, e.conversationId)
         registry.set(persistFailed, false)
+
+        // Replace messages with DB-persisted versions (with IDs)
+        registry.set(
+          messages,
+          e.messages.map((m) => ({ id: m.id, role: m.role, content: m.content }))
+        )
+
+        // Build messageId-keyed corrections map from DB data
+        const correctionsByMessageId = new Map<string, ReadonlyArray<CorrectionItem>>()
+        e.corrections.forEach((c) => {
+          const existing = correctionsByMessageId.get(c.messageId) ?? []
+          correctionsByMessageId.set(c.messageId, [
+            ...existing,
+            { category: c.category, original: c.original, correction: c.correction, explanation: c.explanation }
+          ])
+        })
+        registry.set(corrections, correctionsByMessageId)
+        registry.set(pendingCorrections, new Map())
+
+        replaceState(resolve(`/chat/${e.conversationId}`), {})
       })
     ),
     Match.tag('ConversationPersistFailed', () =>
@@ -240,12 +264,49 @@ export const destroy = (registry: Registry.Registry) =>
     registry.set(conversationId, undefined)
     registry.set(persistFailed, false)
     registry.set(corrections, new Map())
+    registry.set(pendingCorrections, new Map())
     registry.set(messages, [])
     registry.set(streamingText, '')
     registry.set(transcription, '')
     registry.set(error, '')
     registry.set(phase, 'idle')
   })
+
+export const hydrate = (
+  registry: Registry.Registry,
+  data: {
+    readonly conversationId: string
+    readonly messages: ReadonlyArray<{ readonly id: string; readonly role: string; readonly content: string }>
+    readonly corrections: ReadonlyArray<{
+      readonly messageId: string
+      readonly category: string
+      readonly original: string
+      readonly correction: string
+      readonly explanation: string
+    }>
+  }
+) => {
+  registry.set(conversationId, data.conversationId)
+  registry.set(
+    messages,
+    data.messages.map((m) => ({ id: m.id, role: m.role as 'user' | 'assistant', content: m.content }))
+  )
+
+  const correctionsByMessageId = new Map<string, ReadonlyArray<CorrectionItem>>()
+  data.corrections.forEach((c) => {
+    const existing = correctionsByMessageId.get(c.messageId) ?? []
+    correctionsByMessageId.set(c.messageId, [
+      ...existing,
+      {
+        category: c.category as CorrectionItem['category'],
+        original: c.original,
+        correction: c.correction,
+        explanation: c.explanation
+      }
+    ])
+  })
+  registry.set(corrections, correctionsByMessageId)
+}
 
 // Re-export atoms for UI consumption
 export {
@@ -256,6 +317,7 @@ export {
   listening,
   messages,
   muted,
+  pendingCorrections,
   persistFailed,
   phase,
   speaking,

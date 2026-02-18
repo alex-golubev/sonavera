@@ -216,7 +216,23 @@ const buildEventStream = (
               Effect.tap(() => Ref.set(gate, 'saved')),
               Effect.map(
                 (result): Stream.Stream<ConversationStreamEvent> =>
-                  Stream.make(new ConversationPersisted({ conversationId: result.conversationId }))
+                  Stream.make(
+                    new ConversationPersisted({
+                      conversationId: result.conversationId,
+                      messages: result.messages.map((m) => ({
+                        id: m.id,
+                        role: m.role as 'user' | 'assistant',
+                        content: m.content
+                      })),
+                      corrections: result.corrections.map((c) => ({
+                        messageId: c.messageId,
+                        category: c.category as 'grammar' | 'vocabulary' | 'spelling' | 'word order' | 'conjugation',
+                        original: c.original,
+                        correction: c.correction,
+                        explanation: c.explanation
+                      }))
+                    })
+                  )
               ),
               // catchAll intentionally generalizes all errors (including ConversationAccessDenied)
               // to avoid leaking whether a conversationId exists. Server log captures the detail.

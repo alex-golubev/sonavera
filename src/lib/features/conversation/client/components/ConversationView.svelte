@@ -6,6 +6,7 @@
   import * as auth from '$lib/features/auth/store'
   import * as conversation from '$lib/features/conversation/client/store'
   import { DEFAULT_TARGET_LANGUAGE, languageName, type Language } from '$lib/features/language/schema'
+  import type { ConversationMessage } from '$lib/features/conversation/schema'
 
   const registry = getRegistry()
 
@@ -24,8 +25,10 @@
   const isMuted = useAtomValue(conversation.muted)
   const currentError = useAtomValue(conversation.error)
   const correctionMap = useAtomValue(conversation.corrections)
+  const pendingCorrectionMap = useAtomValue(conversation.pendingCorrections)
 
-  const correctionsFor = (index: number) => correctionMap().get(index) ?? []
+  const correctionsFor = (msg: ConversationMessage, index: number) =>
+    msg.id ? (correctionMap().get(msg.id) ?? []) : (pendingCorrectionMap().get(index) ?? [])
 
   // --- Local state ---
   let messagesEl: HTMLDivElement | undefined = $state(undefined)
@@ -111,8 +114,9 @@
     </div>
 
     <!-- Messages -->
-    <div bind:this={messagesEl} class="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6">
-      {#each msgs() as msg, i (i)}
+    <div bind:this={messagesEl} class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
+      <div class="mt-auto"></div>
+      {#each msgs() as msg, i (msg.id ?? i)}
         {#if msg.role === 'assistant'}
           <div class="flex gap-3">
             <Avatar type="ai" />
@@ -124,13 +128,13 @@
           <div class="flex justify-end gap-3">
             <div class="max-w-[75%]">
               <MessageBubble role="user" content={msg.content} />
-              {#if correctionsFor(i).length > 0}
+              {#if correctionsFor(msg, i).length > 0}
                 <div class="mt-1.5 space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
-                  {#each correctionsFor(i) as c, ci (ci)}
+                  {#each correctionsFor(msg, i) as c, ci (ci)}
                     <div class="space-y-0.5">
                       <div class="flex items-center gap-1.5">
                         <span class="rounded-full bg-amber-200/70 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
-                          >{c.category.replace('_', ' ')}</span
+                          >{c.category}</span
                         >
                         <span class="text-xs text-red-400 line-through">{c.original}</span>
                         <span class="text-xs text-gray-400">&rarr;</span>
