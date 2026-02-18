@@ -1,4 +1,3 @@
-import { Readable } from 'node:stream'
 import { Effect, Layer, Stream, pipe } from 'effect'
 import type OpenAI from 'openai'
 import { OpenAiClient, OpenAiClientLive } from '$lib/server/openai'
@@ -12,7 +11,7 @@ const toTtsError = (error: unknown) => new ConversationError({ message: String(e
 
 const bodyToStream = (body: ReadableStream | null) =>
   body
-    ? Stream.fromAsyncIterable(Readable.fromWeb(body as import('node:stream/web').ReadableStream), toTtsError)
+    ? Stream.fromReadableStream(() => body, toTtsError)
     : Stream.fail(new ConversationError({ message: 'Response body is null', phase: 'tts' }))
 
 const createSpeech = (client: OpenAI, text: string, voice: string, signal?: AbortSignal) =>

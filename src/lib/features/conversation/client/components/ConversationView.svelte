@@ -4,7 +4,7 @@
   import { Effect } from 'effect'
   import { page } from '$app/state'
   import * as auth from '$lib/features/auth/store'
-  import * as conversation from '$lib/features/conversation/store'
+  import * as conversation from '$lib/features/conversation/client/store'
   import { DEFAULT_TARGET_LANGUAGE, languageName, type Language } from '$lib/features/language/schema'
 
   const registry = getRegistry()

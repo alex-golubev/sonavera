@@ -21,8 +21,8 @@ import {
   vadRef
 } from './atoms'
 import { createPlayer, pcmConfig } from './pcm-player'
-import { ConversationRpc } from './rpc'
-import { ConversationAudioInput, type ConversationStreamEvent } from './schema'
+import { ConversationRpc } from '../rpc'
+import { ConversationAudioInput, type ConversationStreamEvent } from '../schema'
 import { createVad, toggleVad } from './vad'
 
 // --- PCM player helpers ---
@@ -160,7 +160,6 @@ const startPipeline = (registry: Registry.Registry, input: ConversationAudioInpu
           stopPlayer(registry)
           registry.set(streamingText, '')
           registry.set(transcription, '')
-          registry.set(corrections, new Map())
           registry.set(error, '')
           registry.set(persistFailed, false)
           registry.set(phase, 'transcribing')

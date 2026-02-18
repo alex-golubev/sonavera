@@ -2,7 +2,7 @@ import { Atom } from '$lib/client/effect-atom'
 import type { MicVAD } from '@ricky0123/vad-web'
 import type { Fiber } from 'effect'
 import type { PCMPlayer } from './pcm-player'
-import type { ConversationMessage, CorrectionItem } from './schema'
+import type { ConversationMessage, CorrectionItem } from '../schema'
 
 // --- Mic / VAD ---
 

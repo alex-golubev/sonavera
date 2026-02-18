@@ -11,9 +11,9 @@
 </script>
 
 <div
-  class="rounded-2xl {role === 'assistant'
+  class="w-fit rounded-2xl {role === 'assistant'
     ? 'rounded-tl-none bg-gray-100'
-    : 'rounded-tr-none bg-linear-to-r from-indigo-600 to-fuchsia-600'} px-4 py-3"
+    : 'ml-auto rounded-tr-none bg-linear-to-r from-indigo-600 to-fuchsia-600'} px-4 py-3"
 >
   {#if children}
     {@render children()}
