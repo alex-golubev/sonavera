@@ -2,7 +2,7 @@ import { Schema } from 'effect'
 
 // --- Corrections ---
 
-export const CorrectionCategory = Schema.Literal('grammar', 'vocabulary', 'spelling', 'word_order', 'conjugation')
+export const CorrectionCategory = Schema.Literal('grammar', 'vocabulary', 'spelling', 'word order', 'conjugation')
 export type CorrectionCategory = typeof CorrectionCategory.Type
 
 export const CorrectionItem = Schema.Struct({
