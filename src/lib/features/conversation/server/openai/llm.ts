@@ -35,7 +35,7 @@ const correctionsTool: OpenAI.Chat.Completions.ChatCompletionTool = {
             properties: {
               category: {
                 type: 'string',
-                enum: ['grammar', 'vocabulary', 'spelling', 'word_order', 'conjugation']
+                enum: ['grammar', 'vocabulary', 'spelling', 'word order', 'conjugation']
               },
               original: { type: 'string', description: "The incorrect fragment from the user's message" },
               correction: { type: 'string', description: 'The corrected version' },
