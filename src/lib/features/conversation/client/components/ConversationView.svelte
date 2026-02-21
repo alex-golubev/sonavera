@@ -45,10 +45,21 @@
   }
 
   // --- Auto-scroll ---
+  let isScrolledToBottom = $state(true)
+
+  const handleScroll = (e: Event) => {
+    const target = e.target as HTMLDivElement
+    const { scrollTop, scrollHeight, clientHeight } = target
+    // 10px tolerance for scroll position
+    isScrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 10
+  }
+
   $effect(() => {
     msgs()
     streaming()
-    messagesEl?.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' })
+    if (isScrolledToBottom) {
+      messagesEl?.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' })
+    }
   })
 
   // --- Cleanup ---
@@ -114,19 +125,19 @@
     </div>
 
     <!-- Messages -->
-    <div bind:this={messagesEl} class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
+    <div bind:this={messagesEl} onscroll={handleScroll} class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
       <div class="mt-auto"></div>
       {#each msgs() as msg, i (msg.id ?? i)}
         {#if msg.role === 'assistant'}
           <div class="flex gap-3">
             <Avatar type="ai" />
-            <div class="max-w-[75%]">
+            <div class="max-w-[85%] sm:max-w-[75%]">
               <MessageBubble role="assistant" content={msg.content} />
             </div>
           </div>
         {:else}
           <div class="flex justify-end gap-3">
-            <div class="max-w-[75%]">
+            <div class="max-w-[85%] sm:max-w-[75%]">
               <MessageBubble role="user" content={msg.content} />
               {#if correctionsFor(msg, i).length > 0}
                 <div class="mt-1.5 space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
@@ -154,7 +165,7 @@
       {#if streaming()}
         <div class="flex gap-3">
           <Avatar type="ai" />
-          <div class="max-w-[75%]">
+          <div class="max-w-[85%] sm:max-w-[75%]">
             <MessageBubble role="assistant">
               <p dir="auto" class="text-sm text-slate-700">
                 {streaming()}<span class="ml-0.5 inline-block h-4 w-1 animate-pulse bg-slate-400"></span>

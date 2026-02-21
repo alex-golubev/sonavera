@@ -27,9 +27,17 @@
 <AuthHeading title="Create your account" subtitle="Start practicing languages with AI" />
 
 <form onsubmit={handleSubmit} class="space-y-4">
-  <FormInput id="name" label="Name" bind:value={name} placeholder="Your name" required />
+  <FormInput id="name" label="Name" bind:value={name} placeholder="Your name" required disabled={loading()} autofocus />
 
-  <FormInput id="email" type="email" label="Email" bind:value={email} placeholder="you@example.com" required />
+  <FormInput
+    id="email"
+    type="email"
+    label="Email"
+    bind:value={email}
+    placeholder="you@example.com"
+    required
+    disabled={loading()}
+  />
 
   <FormInput
     id="password"
@@ -39,6 +47,7 @@
     placeholder="At least 8 characters"
     required
     minlength={8}
+    disabled={loading()}
   />
 
   <LanguagePicker
@@ -65,7 +74,10 @@
 
 <p class="mt-6 text-center text-sm text-slate-500">
   Already have an account?
-  <a href={resolve('/auth/login')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-sm">
+  <a
+    href={resolve('/auth/login')}
+    class="rounded-sm font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+  >
     Log in
   </a>
 </p>

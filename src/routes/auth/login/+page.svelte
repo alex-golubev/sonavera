@@ -30,12 +30,21 @@
 {/if}
 
 <form onsubmit={handleSubmit} class="space-y-4">
-  <FormInput id="email" type="email" label="Email" bind:value={email} placeholder="you@example.com" required />
+  <FormInput
+    id="email"
+    type="email"
+    label="Email"
+    bind:value={email}
+    placeholder="you@example.com"
+    required
+    disabled={loading()}
+    autofocus
+  />
 
   {#snippet forgotLink()}
     <a
       href={resolve('/auth/forgot-password')}
-      class="text-sm font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-sm"
+      class="rounded-sm text-sm font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
     >
       Forgot password?
     </a>
@@ -47,6 +56,7 @@
     bind:value={password}
     placeholder="Enter your password"
     required
+    disabled={loading()}
     labelAction={forgotLink}
   />
 
@@ -59,7 +69,10 @@
 
 <p class="mt-6 text-center text-sm text-slate-500">
   Don't have an account?
-  <a href={resolve('/auth/register')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-sm">
+  <a
+    href={resolve('/auth/register')}
+    class="rounded-sm font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+  >
     Sign up
   </a>
 </p>
