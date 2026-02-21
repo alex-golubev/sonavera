@@ -31,11 +31,11 @@
     </svg>
   </div>
 
-  <h1 class="mb-2 text-2xl font-bold text-gray-900">Check your email</h1>
-  <p class="mb-6 text-sm text-gray-500">
+  <h1 class="mb-2 text-2xl font-bold text-slate-900">Check your email</h1>
+  <p class="mb-6 text-sm text-slate-500">
     We sent a verification link to
     {#if email}
-      <span class="font-medium text-gray-700">{email}</span>
+      <span class="font-medium text-slate-700">{email}</span>
     {:else}
       your email address
     {/if}
@@ -60,8 +60,8 @@
   {/if}
 </div>
 
-<p class="mt-6 text-center text-sm text-gray-500">
-  <a href={resolve('/auth/login')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700">
+<p class="mt-6 text-center text-sm text-slate-500">
+  <a href={resolve('/auth/login')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-sm">
     Back to login
   </a>
 </p>

@@ -30,7 +30,7 @@
     <p class="text-center">
       <a
         href={resolve('/auth/forgot-password')}
-        class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700"
+        class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-sm"
       >
         Request new reset link
       </a>
@@ -42,7 +42,7 @@
     <p class="text-center">
       <a
         href={resolve('/auth/forgot-password')}
-        class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700"
+        class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-sm"
       >
         Forgot password?
       </a>

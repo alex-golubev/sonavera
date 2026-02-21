@@ -18,11 +18,11 @@
 <div>
   {#if labelAction}
     <div class="mb-1 flex items-center justify-between">
-      <label for={id} class="block text-sm font-medium text-gray-700">{label}</label>
+      <label for={id} class="block text-sm font-medium text-slate-700">{label}</label>
       {@render labelAction()}
     </div>
   {:else}
-    <label for={id} class="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+    <label for={id} class="mb-1 block text-sm font-medium text-slate-700">{label}</label>
   {/if}
   <input
     {id}
@@ -31,6 +31,6 @@
     {minlength}
     bind:value
     {placeholder}
-    class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none"
+    class="w-full rounded-lg border-0 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-slate-300 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:ring-inset"
   />
 </div>

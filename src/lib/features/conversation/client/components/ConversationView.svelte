@@ -59,15 +59,15 @@
 
 <div class="flex h-dvh flex-col items-center bg-linear-to-b from-slate-50 to-white p-0 sm:p-4">
   <div
-    class="flex h-full w-full max-w-2xl flex-col overflow-hidden bg-white sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-2xl sm:shadow-gray-200/50"
+    class="flex h-full w-full max-w-2xl flex-col overflow-hidden bg-white sm:rounded-2xl sm:border sm:border-slate-200 sm:shadow-2xl sm:shadow-slate-200/50"
   >
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-4 py-3 sm:px-6 sm:py-4">
+    <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3 sm:px-6 sm:py-4">
       <div class="flex items-center gap-3">
         <Avatar type="ai" size="md" online />
         <div>
-          <p class="font-semibold text-gray-900">Emma</p>
-          <p class="text-sm text-gray-500">AI Tutor · {languageName(targetLanguage())}</p>
+          <p class="font-semibold text-slate-900">Emma</p>
+          <p class="text-sm text-slate-500">AI Tutor · {languageName(targetLanguage())}</p>
         </div>
       </div>
 
@@ -137,10 +137,10 @@
                           >{c.category}</span
                         >
                         <span class="text-xs text-red-400 line-through">{c.original}</span>
-                        <span class="text-xs text-gray-400">&rarr;</span>
+                        <span class="text-xs text-slate-400">&rarr;</span>
                         <span class="text-xs font-medium text-green-700">{c.correction}</span>
                       </div>
-                      <p class="text-[11px] leading-tight text-gray-500">{c.explanation}</p>
+                      <p class="text-[11px] leading-tight text-slate-500">{c.explanation}</p>
                     </div>
                   {/each}
                 </div>
@@ -156,8 +156,8 @@
           <Avatar type="ai" />
           <div class="max-w-[75%]">
             <MessageBubble role="assistant">
-              <p dir="auto" class="text-sm text-gray-700">
-                {streaming()}<span class="ml-0.5 inline-block h-4 w-1 animate-pulse bg-gray-400"></span>
+              <p dir="auto" class="text-sm text-slate-700">
+                {streaming()}<span class="ml-0.5 inline-block h-4 w-1 animate-pulse bg-slate-400"></span>
               </p>
             </MessageBubble>
           </div>
@@ -170,7 +170,7 @@
     </div>
 
     <!-- Voice Input -->
-    <div class="border-t border-gray-100 bg-linear-to-t from-gray-50 to-white px-6 py-5">
+    <div class="border-t border-slate-100 bg-linear-to-t from-slate-50 to-white px-6 py-5">
       <div class="flex flex-col items-center gap-3">
         <div class="relative">
           {#if listening() && speaking()}
@@ -210,7 +210,7 @@
             {/if}
           </button>
         </div>
-        <p class="text-sm text-gray-500">
+        <p class="text-sm text-slate-500">
           {#if initializing()}
             Loading...
           {:else if currentPhase() === 'transcribing'}

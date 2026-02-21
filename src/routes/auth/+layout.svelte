@@ -22,7 +22,7 @@
   </div>
 
   <!-- Logo -->
-  <a href={resolve('/')} class="relative mb-8 flex items-center gap-2.5">
+  <a href={resolve('/')} class="relative mb-8 flex items-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-lg">
     <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-fuchsia-500">
       <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path
@@ -32,11 +32,11 @@
         />
       </svg>
     </div>
-    <span class="text-lg font-semibold text-gray-900">Sonavera</span>
+    <span class="text-lg font-semibold text-slate-900">Sonavera</span>
   </a>
 
   <!-- Card -->
-  <div class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-2xl shadow-gray-200/50">
+  <div class="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl shadow-slate-200/50">
     {@render children()}
   </div>
 </div>

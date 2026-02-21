@@ -38,9 +38,9 @@
   </PrimaryButton>
 </form>
 
-<p class="mt-6 text-center text-sm text-gray-500">
+<p class="mt-6 text-center text-sm text-slate-500">
   Remember your password?
-  <a href={resolve('/auth/login')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700">
+  <a href={resolve('/auth/login')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-sm">
     Log in
   </a>
 </p>

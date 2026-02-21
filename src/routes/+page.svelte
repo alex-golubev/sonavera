@@ -36,7 +36,7 @@
   <!-- Navigation -->
   <nav
     class="sticky top-0 z-50 transition-all duration-300 {scrolled
-      ? 'border-b border-gray-200/60 bg-white/80 shadow-sm backdrop-blur-md'
+      ? 'border-b border-slate-200/60 bg-white/80 shadow-sm backdrop-blur-md'
       : 'bg-transparent'}"
   >
     <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -50,25 +50,25 @@
             />
           </svg>
         </div>
-        <span class="text-lg font-semibold text-gray-900">Sonavera</span>
+        <span class="text-lg font-semibold text-slate-900">Sonavera</span>
       </div>
 
       <div class="hidden items-center gap-8 md:flex">
         <a
           href={resolve('/')}
-          class="text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600"
+          class="rounded-sm text-sm font-medium text-slate-500 transition-colors duration-200 hover:text-fuchsia-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
         >
           Features
         </a>
         <a
           href={resolve('/')}
-          class="text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600"
+          class="rounded-sm text-sm font-medium text-slate-500 transition-colors duration-200 hover:text-fuchsia-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
         >
           How it works
         </a>
         <a
           href={resolve('/')}
-          class="text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600"
+          class="rounded-sm text-sm font-medium text-slate-500 transition-colors duration-200 hover:text-fuchsia-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
         >
           Pricing
         </a>
@@ -78,20 +78,20 @@
         {#if data.user}
           <a
             href={resolve('/chat')}
-            class="rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-fuchsia-500/25"
+            class="rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-fuchsia-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
           >
             Go to chat
           </a>
         {:else}
           <a
             href={resolve('/auth/login')}
-            class="hidden text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-fuchsia-600 sm:block"
+            class="hidden rounded-sm text-sm font-medium text-slate-500 transition-colors duration-200 hover:text-fuchsia-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:block"
           >
             Log in
           </a>
           <a
             href={resolve('/auth/register')}
-            class="rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-fuchsia-500/25"
+            class="rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-fuchsia-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
           >
             Start free
           </a>
@@ -112,7 +112,7 @@
       </div>
 
       <!-- Headline -->
-      <h1 class="mb-6 text-4xl leading-tight font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+      <h1 class="mb-6 text-4xl leading-tight font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
         Speak foreign languages
         <span
           class="animate-gradient bg-linear-to-r from-indigo-600 via-fuchsia-500 to-amber-500 bg-clip-text text-transparent"
@@ -122,7 +122,7 @@
       </h1>
 
       <!-- Subheadline -->
-      <p class="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-gray-600 sm:text-xl">
+      <p class="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-600 sm:text-xl">
         Practice conversational English, Spanish, French, and other languages with your personal AI companion. No
         judgment, anytime.
       </p>
@@ -131,7 +131,7 @@
       <div class="mb-16 flex flex-col items-center justify-center gap-4 sm:flex-row">
         <a
           href={resolve(data.user ? '/chat' : '/auth/register')}
-          class="group flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-fuchsia-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-fuchsia-500/30 sm:w-auto"
+          class="group flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-fuchsia-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-fuchsia-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto"
         >
           {data.user ? 'Go to chat' : 'Start talking'}
           <svg
@@ -146,7 +146,7 @@
         </a>
         <a
           href={resolve('/')}
-          class="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-8 py-4 text-base font-semibold text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 sm:w-auto"
+          class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-8 py-4 text-base font-semibold text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto"
         >
           <svg class="h-5 w-5 text-fuchsia-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -168,14 +168,14 @@
 
       <!-- Hero Image / Chat Preview -->
       <div class="relative mx-auto max-w-3xl">
-        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50">
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/50">
           <!-- Call Header -->
-          <div class="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-6 py-4">
+          <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
             <div class="flex items-center gap-3">
               <Avatar type="ai" size="md" online />
               <div>
-                <p class="font-semibold text-gray-900">Emma</p>
-                <p class="text-sm text-gray-500">AI Tutor • English</p>
+                <p class="font-semibold text-slate-900">Emma</p>
+                <p class="text-sm text-slate-500">AI Tutor • English</p>
               </div>
             </div>
             <div class="flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5">
@@ -192,19 +192,19 @@
               <div class="max-w-sm space-y-1.5">
                 <MessageBubble role="assistant">
                   <div class="mb-2 flex items-center gap-2">
-                    <svg class="h-3.5 w-3.5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-3.5 w-3.5 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
                       <path
                         d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"
                       />
                     </svg>
                     <div class="flex items-center gap-0.5">
                       {#each aiWaveHeights as h, i (i)}
-                        <div class="w-0.5 rounded-full bg-gray-300" style="height: {h * 2}px"></div>
+                        <div class="w-0.5 rounded-full bg-slate-300" style="height: {h * 2}px"></div>
                       {/each}
                     </div>
-                    <span class="text-xs text-gray-400">0:04</span>
+                    <span class="text-xs text-slate-400">0:04</span>
                   </div>
-                  <p class="text-sm text-gray-700">
+                  <p class="text-sm text-slate-700">
                     Hi! Let's practice ordering food at a restaurant. I'll be the waiter. Ready?
                   </p>
                 </MessageBubble>
@@ -240,19 +240,19 @@
               <div class="max-w-sm space-y-2">
                 <MessageBubble role="assistant">
                   <div class="mb-2 flex items-center gap-2">
-                    <svg class="h-3.5 w-3.5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-3.5 w-3.5 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
                       <path
                         d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"
                       />
                     </svg>
                     <div class="flex items-center gap-0.5">
                       {#each aiFeedbackWaveHeights as h, i (i)}
-                        <div class="w-0.5 rounded-full bg-gray-300" style="height: {h * 2}px"></div>
+                        <div class="w-0.5 rounded-full bg-slate-300" style="height: {h * 2}px"></div>
                       {/each}
                     </div>
-                    <span class="text-xs text-gray-400">0:05</span>
+                    <span class="text-xs text-slate-400">0:05</span>
                   </div>
-                  <p class="text-sm text-gray-700">
+                  <p class="text-sm text-slate-700">
                     Of course! What would you like to have today? We have some excellent pasta specials.
                   </p>
                 </MessageBubble>
@@ -273,7 +273,7 @@
           </div>
 
           <!-- Voice Input -->
-          <div class="border-t border-gray-100 bg-linear-to-t from-gray-50 to-white px-6 py-5">
+          <div class="border-t border-slate-100 bg-linear-to-t from-slate-50 to-white px-6 py-5">
             <div class="flex flex-col items-center gap-3">
               <!-- Mic button with pulse -->
               <div class="relative">
@@ -284,7 +284,7 @@
                 <button
                   type="button"
                   aria-label="Tap to speak"
-                  class="relative flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 text-white shadow-lg shadow-fuchsia-500/30 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-fuchsia-500/40"
+                  class="relative flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-linear-to-r from-indigo-600 to-fuchsia-600 text-white shadow-lg shadow-fuchsia-500/30 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-fuchsia-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-4"
                 >
                   <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path
@@ -295,14 +295,14 @@
                   </svg>
                 </button>
               </div>
-              <p class="text-sm text-gray-500">Tap to speak</p>
+              <p class="text-sm text-slate-500">Tap to speak</p>
             </div>
           </div>
         </div>
 
         <!-- Floating badges -->
         <div
-          class="animate-float absolute top-1/4 -left-4 hidden rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-lg lg:block"
+          class="animate-float absolute top-1/4 -left-4 hidden rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-lg lg:block"
         >
           <div class="flex items-center gap-3">
             <div
@@ -323,14 +323,14 @@
               </svg>
             </div>
             <div>
-              <p class="text-sm font-semibold text-gray-900">Live conversation</p>
-              <p class="text-xs text-gray-500">Speak naturally</p>
+              <p class="text-sm font-semibold text-slate-900">Live conversation</p>
+              <p class="text-xs text-slate-500">Speak naturally</p>
             </div>
           </div>
         </div>
 
         <div
-          class="animate-float-delayed absolute top-16 -right-4 hidden rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-lg lg:block"
+          class="animate-float-delayed absolute top-16 -right-4 hidden rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-lg lg:block"
         >
           <div class="flex items-center gap-3">
             <div
@@ -351,14 +351,14 @@
               </svg>
             </div>
             <div>
-              <p class="text-sm font-semibold text-gray-900">Smart hints</p>
-              <p class="text-xs text-gray-500">AI corrects mistakes</p>
+              <p class="text-sm font-semibold text-slate-900">Smart hints</p>
+              <p class="text-xs text-slate-500">AI corrects mistakes</p>
             </div>
           </div>
         </div>
 
         <div
-          class="animate-float-delayed-2 absolute -right-4 bottom-1/4 hidden rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-lg lg:block"
+          class="animate-float-delayed-2 absolute -right-4 bottom-1/4 hidden rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-lg lg:block"
         >
           <div class="flex items-center gap-3">
             <div
@@ -379,8 +379,8 @@
               </svg>
             </div>
             <div>
-              <p class="text-sm font-semibold text-gray-900">15+ languages</p>
-              <p class="text-xs text-gray-500">To choose from</p>
+              <p class="text-sm font-semibold text-slate-900">15+ languages</p>
+              <p class="text-xs text-slate-500">To choose from</p>
             </div>
           </div>
         </div>
@@ -407,8 +407,8 @@
               </svg>
             {/each}
           </div>
-          <p class="mt-1 text-sm text-gray-600">
-            <span class="font-semibold text-gray-900">4,000+</span> users already practicing
+          <p class="mt-1 text-sm text-slate-600">
+            <span class="font-semibold text-slate-900">4,000+</span> users already practicing
           </p>
         </div>
       </div>

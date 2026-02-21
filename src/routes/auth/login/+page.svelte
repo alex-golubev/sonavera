@@ -35,7 +35,7 @@
   {#snippet forgotLink()}
     <a
       href={resolve('/auth/forgot-password')}
-      class="text-sm font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700"
+      class="text-sm font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-sm"
     >
       Forgot password?
     </a>
@@ -57,9 +57,9 @@
   <PrimaryButton loading={loading()}>Log in</PrimaryButton>
 </form>
 
-<p class="mt-6 text-center text-sm text-gray-500">
+<p class="mt-6 text-center text-sm text-slate-500">
   Don't have an account?
-  <a href={resolve('/auth/register')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700">
+  <a href={resolve('/auth/register')} class="font-medium text-fuchsia-600 transition-colors hover:text-fuchsia-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-sm">
     Sign up
   </a>
 </p>

@@ -12,12 +12,12 @@
 
 <div
   class="w-fit rounded-2xl {role === 'assistant'
-    ? 'rounded-tl-none bg-gray-100'
+    ? 'rounded-tl-none bg-slate-100'
     : 'ml-auto rounded-tr-none bg-linear-to-r from-indigo-600 to-fuchsia-600'} px-4 py-3"
 >
   {#if children}
     {@render children()}
   {:else if content !== undefined}
-    <p dir="auto" class="text-sm {role === 'assistant' ? 'text-gray-700' : 'text-white'}">{content}</p>
+    <p dir="auto" class="text-sm {role === 'assistant' ? 'text-slate-700' : 'text-white'}">{content}</p>
   {/if}
 </div>
