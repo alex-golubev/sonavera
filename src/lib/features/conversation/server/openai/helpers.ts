@@ -46,7 +46,9 @@ export const updateAccumulators = (
           id: tc.id ?? '',
           name: tc.function?.name ?? '',
           arguments: tc.function?.arguments ?? ''
-        }).pipe(Option.getOrElse(() => EffectArray.append(acc, { ...tc, arguments: '' } as unknown as ToolCallAccumulator)))
+        }).pipe(
+          Option.getOrElse(() => EffectArray.append(acc, { ...tc, arguments: '' } as unknown as ToolCallAccumulator))
+        )
       )
     )
   )

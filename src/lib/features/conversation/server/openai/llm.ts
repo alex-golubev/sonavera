@@ -30,7 +30,9 @@ const streamCompletion = (
           model,
           stream: true,
           messages,
-          ...(options.tools ? { tools: options.tools, tool_choice: options.toolChoice, parallel_tool_calls: false } : {})
+          ...(options.tools
+            ? { tools: options.tools, tool_choice: options.toolChoice, parallel_tool_calls: false }
+            : {})
         },
         { signal }
       ),
@@ -43,7 +45,14 @@ const createCompletion = (
   settings: UserSettingsValue,
   model: string,
   signal?: AbortSignal
-) => streamCompletion(client, toOpenAiMessages(messages, settings), model, { tools: [correctionsTool], toolChoice: 'auto' }, signal)
+) =>
+  streamCompletion(
+    client,
+    toOpenAiMessages(messages, settings),
+    model,
+    { tools: [correctionsTool], toolChoice: 'auto' },
+    signal
+  )
 
 const createFollowUp = (
   client: OpenAI,
@@ -60,7 +69,9 @@ const createFollowUp = (
       {
         role: 'assistant',
         content: null,
-        tool_calls: [{ id: toolCall.id, type: 'function', function: { name: toolCall.name, arguments: toolCall.arguments } }]
+        tool_calls: [
+          { id: toolCall.id, type: 'function', function: { name: toolCall.name, arguments: toolCall.arguments } }
+        ]
       },
       { role: 'tool', tool_call_id: toolCall.id, content: 'Corrections reported successfully.' }
     ],
@@ -97,7 +108,8 @@ export const OpenAiLlmLive = Layer.effect(
 
                 return toolCalls.length > 0 || hasContent
                   ? Ref.update(stateRef, (state) => ({
-                      toolCalls: toolCalls.length > 0 ? updateAccumulators(state.toolCalls, toolCalls) : state.toolCalls,
+                      toolCalls:
+                        toolCalls.length > 0 ? updateAccumulators(state.toolCalls, toolCalls) : state.toolCalls,
                       hasContent: state.hasContent || hasContent
                     }))
                   : Effect.void
@@ -114,9 +126,9 @@ export const OpenAiLlmLive = Layer.effect(
                 const state = yield* Ref.get(stateRef)
                 const reportCall = state.toolCalls.find((tc) => tc.name === 'report_corrections')
 
-                const items = yield* (reportCall && reportCall.arguments.length > 0
+                const items = yield* reportCall && reportCall.arguments.length > 0
                   ? parseCorrections(reportCall.arguments)
-                  : Effect.succeed([]))
+                  : Effect.succeed([])
 
                 return items.length > 0
                   ? Stream.make(new LlmCorrections({ corrections: items }))
@@ -130,14 +142,14 @@ export const OpenAiLlmLive = Layer.effect(
                 const state = yield* Ref.get(stateRef)
                 const reportCall = state.toolCalls.find((tc) => tc.name === 'report_corrections')
 
-                return yield* (!state.hasContent && reportCall && reportCall.id.length > 0
+                return yield* !state.hasContent && reportCall && reportCall.id.length > 0
                   ? pipe(
                       createFollowUp(client, messages, settings, reportCall, model, signal),
                       Effect.map((followUpResponse) =>
                         contentDeltas(Stream.fromAsyncIterable(followUpResponse, toLlmError))
                       )
                     )
-                  : Effect.succeed(Stream.empty as Stream.Stream<LlmDelta, ConversationError>))
+                  : Effect.succeed(Stream.empty as Stream.Stream<LlmDelta, ConversationError>)
               })
             )
 

@@ -1,25 +1,22 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
   import { useAtomValue, getRegistry } from '$lib/client/effect-atom'
-  import { Alert, AuthHeading, FormInput, FormSelect, PrimaryButton } from '$lib/components'
+  import { Alert, AuthHeading, FormInput, LanguagePicker, LevelPicker, PrimaryButton } from '$lib/components'
   import { Effect } from 'effect'
   import * as auth from '$lib/features/auth/store'
-  import { languages } from '$lib/features/language/schema'
-  import { levels } from '$lib/features/level/schema'
+  import type { Language } from '$lib/features/language/schema'
+  import type { Level } from '$lib/features/level/schema'
 
   const registry = getRegistry()
   const loading = useAtomValue(auth.loading)
   const error = useAtomValue(auth.error)
 
-  const languageOptions = languages.map((l) => ({ value: l.code, label: l.name }))
-  const levelOptions = levels.map((l) => ({ value: l.code, label: l.name }))
-
   let name = $state('')
   let email = $state('')
   let password = $state('')
-  let nativeLanguage = $state('en')
-  let targetLanguage = $state('es')
-  let level = $state('A1')
+  let nativeLanguage = $state<Language>('en')
+  let targetLanguage = $state<Language>('es')
+  let level = $state<Level>('A1')
 
   const handleSubmit = (e: SubmitEvent) => {
     e.preventDefault()
@@ -44,12 +41,20 @@
     minlength={8}
   />
 
-  <div class="grid grid-cols-2 gap-3">
-    <FormSelect id="nativeLanguage" label="I speak" bind:value={nativeLanguage} options={languageOptions} />
-    <FormSelect id="targetLanguage" label="I'm learning" bind:value={targetLanguage} options={languageOptions} />
-  </div>
+  <LanguagePicker
+    id="nativeLanguage"
+    label="I speak"
+    bind:value={nativeLanguage}
+    disabledLanguages={[targetLanguage]}
+  />
+  <LanguagePicker
+    id="targetLanguage"
+    label="I'm learning"
+    bind:value={targetLanguage}
+    disabledLanguages={[nativeLanguage]}
+  />
 
-  <FormSelect id="level" label="My level" bind:value={level} options={levelOptions} />
+  <LevelPicker id="level" label="My level" bind:value={level} />
 
   {#if error()}
     <Alert variant="error" message={error()} />
