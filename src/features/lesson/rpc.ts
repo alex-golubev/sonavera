@@ -2,17 +2,6 @@ import { Rpc, RpcGroup } from '@effect/rpc'
 import { Schema } from 'effect'
 import { LessonError } from './errors'
 
-// --- Ping ---
-
-export class PingResponse extends Schema.Class<PingResponse>('PingResponse')({
-  message: Schema.String
-}) {}
-
-const Ping = Rpc.make('Ping', {
-  payload: {},
-  success: PingResponse
-})
-
 // --- GetConnectionInfo ---
 
 export class ConnectionInfo extends Schema.Class<ConnectionInfo>('ConnectionInfo')({
@@ -29,4 +18,4 @@ const GetConnectionInfo = Rpc.make('GetConnectionInfo', {
 
 // --- Group ---
 
-export class LessonRpcGroup extends RpcGroup.make(Ping, GetConnectionInfo) {}
+export class LessonRpcGroup extends RpcGroup.make(GetConnectionInfo) {}

@@ -6,8 +6,10 @@ export class LessonError extends Schema.TaggedError<LessonError>()('LessonError'
 
 export class LiveKitTokenError extends Data.TaggedError('LiveKitTokenError')<{
   readonly message: string
+  readonly cause: unknown
 }> {}
 
 export class SessionStartError extends Data.TaggedError('SessionStartError')<{
+  readonly message: string
   readonly cause: unknown
 }> {}

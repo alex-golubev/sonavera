@@ -1,6 +1,6 @@
 'use client'
 
-import { Atom } from '@effect-atom/atom'
+import { Atom, Result } from '@effect-atom/atom'
 import { useAtom } from '@effect-atom/atom-react'
 import { getConnectionInfo } from '~/features/lesson/atoms'
 import { LessonRoom } from './LessonRoom'
@@ -27,10 +27,10 @@ function Connecting() {
   )
 }
 
-function Failed({ onRetry }: { onRetry: () => void }) {
+function Failed({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4">
-      <p className="text-lg text-red-500">Failed to connect</p>
+      <p className="text-lg text-red-500">{message}</p>
       <button
         type="button"
         onClick={onRetry}
@@ -72,12 +72,11 @@ export function LessonView() {
   const start = () => write({ payload: { language: 'en' } })
   const end = () => write(Atom.Reset)
 
-  switch (result._tag) {
-    case 'Initial':
-      return result.waiting ? <Connecting /> : <Idle onStart={start} />
-    case 'Failure':
-      return <Failed onRetry={start} />
-    case 'Success':
-      return <Active url={result.value.url} token={result.value.token} onEnd={end} onError={end} />
-  }
+  return Result.builder(result)
+    .onWaiting(() => <Connecting />)
+    .onInitial(() => <Idle onStart={start} />)
+    .onError((error) => <Failed message={error.message} onRetry={start} />)
+    .onDefect(() => <Failed message="Unexpected error occurred" onRetry={start} />)
+    .onSuccess((value) => <Active url={value.url} token={value.token} onEnd={end} onError={end} />)
+    .render()
 }

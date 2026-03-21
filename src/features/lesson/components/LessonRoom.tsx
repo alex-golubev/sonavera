@@ -25,14 +25,14 @@ export function LessonRoom({ url, token, onError }: { url: string; token: string
   useEffect(() => {
     const scope = Effect.runSync(Scope.make())
     Effect.gen(function* () {
-      yield* Effect.addFinalizer(() => Effect.promise(() => session.end()))
+      yield* Effect.addFinalizer(() => Effect.tryPromise(() => session.end()).pipe(Effect.ignoreLogged))
       yield* Effect.tryPromise({
         try: () => session.start(),
-        catch: (cause) => new SessionStartError({ cause })
+        catch: (cause) => new SessionStartError({ message: String(cause), cause })
       })
     }).pipe(
       Effect.catchTag('SessionStartError', () => Effect.sync(() => onError())),
-      Effect.catchAllCause(Effect.logError),
+      Effect.catchAllCause((cause) => Effect.logError(cause).pipe(Effect.andThen(Effect.sync(() => onError())))),
       Effect.provideService(Scope.Scope, scope),
       Effect.runFork
     )

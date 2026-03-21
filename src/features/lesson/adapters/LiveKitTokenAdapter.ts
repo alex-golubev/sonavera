@@ -22,9 +22,9 @@ export const LiveKitTokenLive = Layer.effect(
             ttl: '15m'
           })
           at.addGrant({ roomJoin: true, room: roomName })
-          const token = yield* Effect.promise(() => at.toJwt())
+          const token = yield* Effect.tryPromise(() => at.toJwt())
           return { url: config.url, token }
-        }).pipe(Effect.mapError((error) => new LiveKitTokenError({ message: String(error) })))
+        }).pipe(Effect.mapError((error) => new LiveKitTokenError({ message: String(error), cause: error })))
     }
   })
 )

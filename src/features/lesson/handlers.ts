@@ -1,13 +1,12 @@
 import { Effect } from 'effect'
 import { LessonError } from './errors'
 import { LiveKitToken } from './ports'
-import { ConnectionInfo, LessonRpcGroup, PingResponse } from './rpc'
+import { ConnectionInfo, LessonRpcGroup } from './rpc'
 
 export const LessonHandlersLayer = LessonRpcGroup.toLayer(
   Effect.gen(function* () {
     const livekit = yield* LiveKitToken
     return {
-      Ping: () => Effect.succeed(new PingResponse({ message: 'pong' })),
       GetConnectionInfo: ({ language }) =>
         Effect.gen(function* () {
           const roomName = `lesson-${crypto.randomUUID()}`
