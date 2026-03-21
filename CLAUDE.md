@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Sonavera — a Next.js 16 application using React 19, TypeScript 5, and Tailwind CSS 4.
 
+@AGENTS.md
+
 ## Commands
 
 ```bash
