@@ -1,5 +1,5 @@
 import { RoomAudioRenderer, SessionProvider, useAgent, useSession } from '@livekit/components-react'
-import { Effect, Exit, Match, Scope } from 'effect'
+import { Cause, Effect, Exit, Match, Scope } from 'effect'
 import { TokenSource } from 'livekit-client'
 import { useEffect, useMemo } from 'react'
 import { SessionStartError } from '~/features/lesson/errors'
@@ -32,7 +32,11 @@ export function LessonRoom({ url, token, onError }: { url: string; token: string
       })
     }).pipe(
       Effect.catchTag('SessionStartError', () => Effect.sync(() => onError())),
-      Effect.catchAllCause((cause) => Effect.logError(cause).pipe(Effect.andThen(Effect.sync(() => onError())))),
+      Effect.catchAllCause((cause) =>
+        Cause.isInterruptedOnly(cause)
+          ? Effect.succeed(void 0)
+          : Effect.logError(cause).pipe(Effect.andThen(Effect.sync(() => onError())))
+      ),
       Effect.provideService(Scope.Scope, scope),
       Effect.runFork
     )

@@ -1,20 +1,20 @@
 'use client'
 
-import { Atom, Result } from '@effect-atom/atom'
-import { useAtom } from '@effect-atom/atom-react'
-import { getConnectionInfo } from '~/features/lesson/atoms'
+import { Result } from '@effect-atom/atom'
+import Link from 'next/link'
+import { useLessonSession } from '~/features/lesson/hooks/useLessonSession'
 import { LessonRoom } from './LessonRoom'
 
-function Idle({ onStart }: { onStart: () => void }) {
+function NotStarted() {
   return (
-    <div className="flex flex-1 items-center justify-center">
-      <button
-        type="button"
-        onClick={onStart}
-        className="rounded-full bg-foreground px-8 py-4 text-background text-lg font-medium transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+    <div className="flex flex-1 flex-col items-center justify-center gap-4">
+      <p className="text-foreground/70">Lesson is not started yet.</p>
+      <Link
+        href="/"
+        className="rounded-full bg-foreground px-6 py-3 text-background font-medium transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
       >
-        Start Lesson
-      </button>
+        Go Home
+      </Link>
     </div>
   )
 }
@@ -68,15 +68,13 @@ function Active({
 }
 
 export function LessonView() {
-  const [result, write] = useAtom(getConnectionInfo)
-  const start = () => write({ payload: { language: 'en' } })
-  const end = () => write(Atom.Reset)
+  const { connectionInfo, start, reset } = useLessonSession()
 
-  return Result.builder(result)
+  return Result.builder(connectionInfo)
     .onWaiting(() => <Connecting />)
-    .onInitial(() => <Idle onStart={start} />)
+    .onInitial(() => <NotStarted />)
     .onError((error) => <Failed message={error.message} onRetry={start} />)
     .onDefect(() => <Failed message="Unexpected error occurred" onRetry={start} />)
-    .onSuccess((value) => <Active url={value.url} token={value.token} onEnd={end} onError={end} />)
+    .onSuccess((value) => <Active url={value.url} token={value.token} onEnd={reset} onError={reset} />)
     .render()
 }
