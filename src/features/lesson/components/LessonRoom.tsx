@@ -1,7 +1,8 @@
 import { RoomAudioRenderer, SessionProvider, useAgent, useSession } from '@livekit/components-react'
-import { Match } from 'effect'
+import { Effect, Exit, Match, Scope } from 'effect'
 import { TokenSource } from 'livekit-client'
 import { useEffect, useMemo } from 'react'
+import { SessionStartError } from '~/features/lesson/errors'
 
 const AGENT_TIMEOUT_MS = 15_000
 
@@ -17,14 +18,28 @@ function AgentStatus() {
   )
 }
 
-export function LessonRoom({ url, token }: { url: string; token: string }) {
+export function LessonRoom({ url, token, onError }: { url: string; token: string; onError: () => void }) {
   const tokenSource = useMemo(() => TokenSource.literal({ serverUrl: url, participantToken: token }), [url, token])
   const session = useSession(tokenSource, { agentConnectTimeoutMilliseconds: AGENT_TIMEOUT_MS })
 
   useEffect(() => {
-    session.start({ tracks: { microphone: { enabled: true } } })
-  }, [session.start])
-
+    const scope = Effect.runSync(Scope.make())
+    Effect.gen(function* () {
+      yield* Effect.addFinalizer(() => Effect.promise(() => session.end()))
+      yield* Effect.tryPromise({
+        try: () => session.start(),
+        catch: (cause) => new SessionStartError({ cause })
+      })
+    }).pipe(
+      Effect.catchTag('SessionStartError', () => Effect.sync(() => onError())),
+      Effect.catchAllCause(Effect.logError),
+      Effect.provideService(Scope.Scope, scope),
+      Effect.runFork
+    )
+    return () => {
+      Scope.close(scope, Exit.void).pipe(Effect.runFork)
+    }
+  }, [session.start, session.end, onError])
   return (
     <SessionProvider session={session}>
       <RoomAudioRenderer />

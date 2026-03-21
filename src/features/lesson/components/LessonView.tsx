@@ -42,10 +42,20 @@ function Failed({ onRetry }: { onRetry: () => void }) {
   )
 }
 
-function Active({ url, token, onEnd }: { url: string; token: string; onEnd: () => void }) {
+function Active({
+  url,
+  token,
+  onEnd,
+  onError
+}: {
+  url: string
+  token: string
+  onEnd: () => void
+  onError: () => void
+}) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6">
-      <LessonRoom url={url} token={token} />
+      <LessonRoom url={url} token={token} onError={onError} />
       <button
         type="button"
         onClick={onEnd}
@@ -68,6 +78,6 @@ export function LessonView() {
     case 'Failure':
       return <Failed onRetry={start} />
     case 'Success':
-      return <Active url={result.value.url} token={result.value.token} onEnd={end} />
+      return <Active url={result.value.url} token={result.value.token} onEnd={end} onError={end} />
   }
 }

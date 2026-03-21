@@ -1,6 +1,7 @@
 import { Config, Effect, Layer, Redacted } from 'effect'
 import { AccessToken } from 'livekit-server-sdk'
-import { LiveKitToken, LiveKitTokenError } from '../ports'
+import { LiveKitTokenError } from '../errors'
+import { LiveKitToken } from '../ports'
 
 const LiveKitConfig = Config.all({
   apiKey: Config.string('LIVEKIT_API_KEY'),

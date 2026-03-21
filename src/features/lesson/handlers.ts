@@ -1,6 +1,7 @@
 import { Effect } from 'effect'
+import { LessonError } from './errors'
 import { LiveKitToken } from './ports'
-import { ConnectionInfo, LessonError, LessonRpcGroup, PingResponse } from './rpc'
+import { ConnectionInfo, LessonRpcGroup, PingResponse } from './rpc'
 
 export const LessonHandlersLayer = LessonRpcGroup.toLayer(
   Effect.gen(function* () {

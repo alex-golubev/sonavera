@@ -1,11 +1,6 @@
 import { Rpc, RpcGroup } from '@effect/rpc'
 import { Schema } from 'effect'
-
-// --- Errors ---
-
-export class LessonError extends Schema.TaggedError<LessonError>()('LessonError', {
-  message: Schema.String
-}) {}
+import { LessonError } from './errors'
 
 // --- Ping ---
 
