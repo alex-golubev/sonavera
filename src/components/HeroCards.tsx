@@ -1,18 +1,18 @@
 export function AIChatCard() {
   return (
-    <div className="absolute top-0 right-10 lg:right-6 z-10 transform rotate-[4deg] rounded-[2rem] border border-white/60 bg-white/70 p-6 lg:p-7 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-4 hover:-translate-x-2 hover:rotate-0 hover:scale-[1.05] hover:z-50 hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.12)] dark:border-white/5 dark:bg-neutral-900/60 dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] w-[280px] sm:w-[320px]">
+    <div className="absolute top-0 right-10 lg:right-6 z-10 transform rotate-[4deg] rounded-[2rem] border border-white/60 bg-white/70 p-6 lg:p-7 shadow-[0_8px_20px_rgba(0,0,0,0.04),0_20px_50px_-12px_rgba(0,0,0,0.1)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-4 hover:-translate-x-2 hover:rotate-0 hover:scale-[1.05] hover:z-50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06),0_40px_80px_-15px_rgba(0,0,0,0.16)] dark:border-white/5 dark:bg-neutral-900/60 dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] w-[280px] sm:w-[320px]">
       <div className="flex items-center gap-4 mb-4">
         <div className="h-12 w-12 flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-sm shadow-md">
           AI
         </div>
         <div>
-          <p className="text-[14px] font-semibold text-neutral-900 dark:text-white leading-tight mb-0.5">
+          <p className="text-[14px] font-semibold text-neutral-900 dark:text-white leading-tight mb-0.5 [text-shadow:0_1px_2px_rgba(0,0,0,0.08)]">
             Native Tutor
           </p>
           <p className="text-[10px] text-neutral-400 uppercase tracking-widest font-medium">Paris, France</p>
         </div>
       </div>
-      <p className="text-[15px] font-medium leading-relaxed text-neutral-600 dark:text-neutral-300">
+      <p className="text-[15px] font-medium leading-relaxed text-neutral-600 dark:text-neutral-300 [text-shadow:0_1px_2px_rgba(0,0,0,0.05)]">
         "Bonjour! Comment s'est passée ta journée? Prêt pour notre conversation?"
       </p>
     </div>
@@ -92,7 +92,7 @@ export function PronunciationFeedbackCard() {
     <div className="absolute top-[290px] right-2 lg:right-12 z-30 transform rotate-[12deg] rounded-[1.5rem] bg-neutral-900 p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-500 hover:-translate-y-8 hover:-translate-x-2 hover:rotate-0 hover:scale-[1.05] hover:z-50 hover:shadow-[0_50px_100px_-15px_rgba(0,0,0,0.4)] dark:bg-neutral-100 dark:border dark:border-neutral-200 text-white dark:text-neutral-900 w-[240px] sm:w-[260px]">
       <div className="flex items-center justify-between mb-4">
         <span className="text-[12px] font-medium opacity-80 dark:opacity-70 tracking-wide">Pronunciation</span>
-        <span className="text-xl font-bold text-emerald-400 dark:text-emerald-500">96%</span>
+        <span className="text-xl font-bold text-emerald-400 dark:text-emerald-500 [text-shadow:0_0_8px_rgba(52,211,153,0.4)]">96%</span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-neutral-800 dark:bg-neutral-200 overflow-hidden mb-3">
         <div className="h-full w-[96%] rounded-full bg-emerald-400 dark:bg-emerald-500"></div>
@@ -106,7 +106,7 @@ export function PronunciationFeedbackCard() {
 
 export function ProgressAchievementCard() {
   return (
-    <div className="absolute top-[140px] left-[10px] lg:left-0 z-20 transform -rotate-[3deg] rounded-[2rem] border border-white/40 bg-white/60 p-5 lg:p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-6 hover:translate-x-2 hover:rotate-0 hover:scale-[1.05] hover:z-50 hover:shadow-[0_50px_100px_-15px_rgba(0,0,0,0.15)] dark:border-neutral-800/60 dark:bg-neutral-900/50 dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_50px_100px_-15px_rgba(0,0,0,0.8)] w-[280px] sm:w-[320px]">
+    <div className="absolute top-[140px] left-[10px] lg:left-0 z-20 transform -rotate-[3deg] rounded-[2rem] border border-white/40 bg-white/60 p-5 lg:p-6 shadow-[0_8px_20px_rgba(0,0,0,0.04),0_30px_60px_-12px_rgba(0,0,0,0.12)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-6 hover:translate-x-2 hover:rotate-0 hover:scale-[1.05] hover:z-50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06),0_50px_100px_-15px_rgba(0,0,0,0.18)] dark:border-neutral-800/60 dark:bg-neutral-900/50 dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_50px_100px_-15px_rgba(0,0,0,0.8)] w-[280px] sm:w-[320px]">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[12px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
           Current Streak
@@ -127,14 +127,14 @@ export function ProgressAchievementCard() {
       </div>
 
       <div className="flex items-end gap-2.5 mb-4 mt-1">
-        <span className="text-4xl font-bold tracking-tight text-neutral-900 dark:text-white leading-none">14</span>
+        <span className="text-4xl font-bold tracking-tight text-neutral-900 dark:text-white leading-none [text-shadow:0_1px_3px_rgba(0,0,0,0.1)]">14</span>
         <span className="text-base font-medium text-neutral-400 dark:text-neutral-500 mb-0.5">Days</span>
       </div>
 
       <div className="space-y-2.5">
         <div className="flex justify-between text-sm font-medium">
           <span className="text-neutral-500 dark:text-neutral-400">Weekly Goal</span>
-          <span className="text-emerald-500 font-bold">5 / 7</span>
+          <span className="text-emerald-500 font-bold [text-shadow:0_0_6px_rgba(16,185,129,0.3)]">5 / 7</span>
         </div>
         <div className="h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
           <div className="h-full w-[71%] rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"></div>

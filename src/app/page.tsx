@@ -18,14 +18,14 @@ export default function Home() {
             <span>AI Voice Model 2.0</span>
           </div>
 
-          <h1 className="mb-10 text-5xl font-medium leading-[1.1] tracking-tight text-neutral-900 dark:text-white sm:text-6xl md:text-7xl lg:text-[4.2rem]">
+          <h1 className="mb-10 text-5xl font-medium leading-[1.1] tracking-tight text-neutral-900 dark:text-white sm:text-6xl md:text-7xl lg:text-[4.2rem] [text-shadow:0_1px_2px_rgba(0,0,0,0.05)]">
             Master languages <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-blue-500 pb-2">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-blue-500 pb-2 drop-shadow-[0_1px_3px_rgba(52,211,153,0.15)]">
               without scripts
             </span>
           </h1>
 
-          <p className="mb-14 max-w-110 text-lg font-light leading-relaxed text-neutral-500 dark:text-neutral-400 lg:text-xl">
+          <p className="mb-14 max-w-110 text-lg font-light leading-relaxed text-neutral-500 dark:text-neutral-400 lg:text-xl [text-shadow:0_1px_2px_rgba(0,0,0,0.05)]">
             Learn through real conversations. An AI tutor that listens, speaks, and corrects your pronunciation live.
           </p>
 

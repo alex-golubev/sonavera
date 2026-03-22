@@ -62,7 +62,7 @@ export function HomeLessonStartButton() {
         type="button"
         onClick={onStart}
         disabled={isWaiting}
-        className="rounded-full bg-foreground px-8 py-4 text-background text-lg font-medium transition-colors hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-[#ccc]"
+        className="cursor-pointer rounded-full bg-foreground px-8 py-4 text-background text-lg font-medium transition-all shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-70 dark:shadow-[0_4px_12px_rgba(255,255,255,0.1)] dark:hover:shadow-[0_8px_24px_rgba(255,255,255,0.15)] dark:hover:bg-[#ccc]"
       >
         {buttonLabel}
       </button>
