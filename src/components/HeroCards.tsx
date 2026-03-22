@@ -2,9 +2,13 @@ export function AIChatCard() {
   return (
     <div className="absolute top-0 right-10 lg:right-6 z-10 transform rotate-[4deg] rounded-[2rem] border border-white/60 bg-white/70 p-6 lg:p-7 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] backdrop-blur-2xl transition-all duration-500 hover:-translate-y-4 hover:-translate-x-2 hover:rotate-0 hover:scale-[1.05] hover:z-50 hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.12)] dark:border-white/5 dark:bg-neutral-900/60 dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] w-[280px] sm:w-[320px]">
       <div className="flex items-center gap-4 mb-4">
-        <div className="h-12 w-12 flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-sm shadow-md">AI</div>
+        <div className="h-12 w-12 flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-sm shadow-md">
+          AI
+        </div>
         <div>
-          <p className="text-[14px] font-semibold text-neutral-900 dark:text-white leading-tight mb-0.5">Native Tutor</p>
+          <p className="text-[14px] font-semibold text-neutral-900 dark:text-white leading-tight mb-0.5">
+            Native Tutor
+          </p>
           <p className="text-[10px] text-neutral-400 uppercase tracking-widest font-medium">Paris, France</p>
         </div>
       </div>
@@ -12,7 +16,7 @@ export function AIChatCard() {
         "Bonjour! Comment s'est passée ta journée? Prêt pour notre conversation?"
       </p>
     </div>
-  );
+  )
 }
 
 export function VoiceRecordingCard() {
@@ -21,7 +25,9 @@ export function VoiceRecordingCard() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2.5">
           <div className="h-2.5 w-2.5 rounded-full bg-red-400 animate-[pulse_2s_infinite]"></div>
-          <span className="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">Recording</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+            Recording
+          </span>
         </div>
         <span className="text-sm font-mono text-neutral-400">0:12</span>
       </div>
@@ -29,14 +35,14 @@ export function VoiceRecordingCard() {
       <div className="flex items-center justify-center gap-[6px] h-14">
         {[...Array(22)].map((_, i) => (
           <div
-            key={i}
+            key={`bar-${String(i)}`}
             className={`w-1.5 rounded-full bg-emerald-400 ${[3, 8, 12, 17, 21].includes(i) ? 'h-10' : [1, 5, 10, 15, 19].includes(i) ? 'h-6' : 'h-3'} opacity-80`}
             style={{ animation: `pulse ${1.5 + Math.random()}s infinite alternate` }}
           ></div>
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 export function GrammarAnalysisCard() {
@@ -45,22 +51,40 @@ export function GrammarAnalysisCard() {
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-[pulse_2s_infinite]"></div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Analysis Active</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+            Analysis Active
+          </span>
         </div>
       </div>
 
       <p className="text-[15px] font-medium leading-relaxed text-neutral-600 dark:text-neutral-300 mb-6">
-        "Un café, <span className="line-through text-red-500/70 mr-1">pour</span> <span className="text-emerald-600 dark:text-emerald-400 font-bold">s'il vous plaît</span>."
+        "Un café, <span className="line-through text-red-500/70 mr-1">pour</span>{' '}
+        <span className="text-emerald-600 dark:text-emerald-400 font-bold">s'il vous plaît</span>."
       </p>
 
       <div className="flex items-center gap-3">
         <div className="flex items-center justify-center h-7 w-7 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <svg
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
         </div>
-        <p className="text-[12.5px] font-semibold text-neutral-600 dark:text-neutral-400">Politeness & Formality fixed</p>
+        <p className="text-[12.5px] font-semibold text-neutral-600 dark:text-neutral-400">
+          Politeness & Formality fixed
+        </p>
       </div>
     </div>
-  );
+  )
 }
 
 export function PronunciationFeedbackCard() {
@@ -77,16 +101,28 @@ export function PronunciationFeedbackCard() {
         Excellent intonation on the vowels. Keep going!
       </p>
     </div>
-  );
+  )
 }
 
 export function ProgressAchievementCard() {
   return (
     <div className="absolute top-[140px] left-[10px] lg:left-0 z-20 transform -rotate-[3deg] rounded-[2rem] border border-white/40 bg-white/60 p-5 lg:p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-6 hover:translate-x-2 hover:rotate-0 hover:scale-[1.05] hover:z-50 hover:shadow-[0_50px_100px_-15px_rgba(0,0,0,0.15)] dark:border-neutral-800/60 dark:bg-neutral-900/50 dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_50px_100px_-15px_rgba(0,0,0,0.8)] w-[280px] sm:w-[320px]">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[12px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">Current Streak</h3>
+        <h3 className="text-[12px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+          Current Streak
+        </h3>
         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-500">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M11.66 22a10 10 0 01-6.14-2 7.78 7.78 0 01-3-6C2.26 9.3 5 5 9.77 2c0 2 1.48 4 3 6 1.7-1.33 2.76-3.83 2-6 5.86 2 9.07 7.15 8.04 12A10 10 0 0111.66 22z" /></svg>
+          <svg
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            stroke="none"
+          >
+            <path d="M11.66 22a10 10 0 01-6.14-2 7.78 7.78 0 01-3-6C2.26 9.3 5 5 9.77 2c0 2 1.48 4 3 6 1.7-1.33 2.76-3.83 2-6 5.86 2 9.07 7.15 8.04 12A10 10 0 0111.66 22z" />
+          </svg>
         </div>
       </div>
 
@@ -105,5 +141,5 @@ export function ProgressAchievementCard() {
         </div>
       </div>
     </div>
-  );
+  )
 }

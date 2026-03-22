@@ -1,22 +1,11 @@
-import { RoomAudioRenderer, SessionProvider, useAgent, useSession } from '@livekit/components-react'
-import { Cause, Effect, Exit, Match, Scope } from 'effect'
+import { RoomAudioRenderer, SessionProvider, useSession } from '@livekit/components-react'
+import { Cause, Effect, Exit, Scope } from 'effect'
 import { TokenSource } from 'livekit-client'
 import { useEffect, useMemo } from 'react'
 import { SessionStartError } from '~/features/lesson/errors'
+import { Transcript } from './Transcript'
 
 const AGENT_TIMEOUT_MS = 15_000
-
-function AgentStatus() {
-  const { state, failureReasons } = useAgent()
-  return (
-    <p className="text-sm font-mono text-foreground/60">
-      {Match.value(state).pipe(
-        Match.when('failed', () => `Agent failed: ${failureReasons?.join(', ')}`),
-        Match.orElse((s) => s)
-      )}
-    </p>
-  )
-}
 
 export function LessonRoom({ url, token, onError }: { url: string; token: string; onError: () => void }) {
   const tokenSource = useMemo(() => TokenSource.literal({ serverUrl: url, participantToken: token }), [url, token])
@@ -47,7 +36,7 @@ export function LessonRoom({ url, token, onError }: { url: string; token: string
   return (
     <SessionProvider session={session}>
       <RoomAudioRenderer />
-      <AgentStatus />
+      <Transcript />
     </SessionProvider>
   )
 }

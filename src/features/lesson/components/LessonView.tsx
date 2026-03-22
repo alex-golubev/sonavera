@@ -54,7 +54,7 @@ function Active({
   onError: () => void
 }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6">
+    <div className="flex flex-1 flex-col items-center gap-4 p-4">
       <LessonRoom url={url} token={token} onError={onError} />
       <button
         type="button"
