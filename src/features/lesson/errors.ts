@@ -1,15 +1,12 @@
-import { Data, Schema } from 'effect'
+import { Schema } from 'effect'
 
-export class LessonError extends Schema.TaggedError<LessonError>()('LessonError', {
+export class RoomCreationError extends Schema.TaggedError<RoomCreationError>()('RoomCreationError', {
   message: Schema.String
 }) {}
 
-export class LiveKitTokenError extends Data.TaggedError('LiveKitTokenError')<{
-  readonly message: string
-  readonly cause: unknown
-}> {}
+export class TokenGenerationError extends Schema.TaggedError<TokenGenerationError>()('TokenGenerationError', {
+  message: Schema.String
+}) {}
 
-export class SessionStartError extends Data.TaggedError('SessionStartError')<{
-  readonly message: string
-  readonly cause: unknown
-}> {}
+export const LessonError = Schema.Union(RoomCreationError, TokenGenerationError)
+export type LessonError = typeof LessonError.Type

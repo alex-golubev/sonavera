@@ -1,9 +1,5 @@
-import { LessonView } from '~/features/lesson/components/LessonView'
+import { LessonPageGuard } from '~/features/lesson/components/LessonPageGuard'
 
 export default function LessonPage() {
-  return (
-    <div className="flex flex-1">
-      <LessonView />
-    </div>
-  )
+  return <LessonPageGuard />
 }

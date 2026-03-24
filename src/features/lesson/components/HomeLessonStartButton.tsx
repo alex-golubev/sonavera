@@ -1,51 +1,54 @@
 'use client'
 
-import { Result } from '@effect-atom/atom'
-import { Match } from 'effect'
+import { Result, useAtomSet, useAtomValue } from '@effect-atom/atom-react'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect } from 'react'
-import { useLessonSession } from '~/features/lesson/hooks/useLessonSession'
+import { useEffect } from 'react'
+import { startLessonAtom } from '~/features/lesson/store'
 
-export function HomeLessonStartButton() {
-  const router = useRouter()
-  const { connectionInfo, start, restart } = useLessonSession()
+const buttonClass =
+  'cursor-pointer rounded-full bg-foreground px-8 py-4 text-background text-lg font-medium transition-all shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-70 dark:shadow-[0_4px_12px_rgba(255,255,255,0.1)] dark:hover:shadow-[0_8px_24px_rgba(255,255,255,0.15)] dark:hover:bg-[#ccc]'
 
-  useEffect(() => {
-    router.prefetch('/lesson')
-  }, [router])
-
-  const onStart = useCallback(() => {
-    Match.value(connectionInfo).pipe(
-      Match.tag('Initial', ({ waiting }) => waiting || start()),
-      Match.tag('Failure', ({ waiting }) => waiting || restart()),
-      Match.tag('Success', () => {}),
-      Match.exhaustive
-    )
-    router.push('/lesson')
-  }, [connectionInfo, start, restart, router])
-
-  const buttonLabel = Match.value(connectionInfo).pipe(
-    Match.when({ waiting: true }, () => 'Starting Lesson...'),
-    Match.tag('Success', () => 'Resume Lesson'),
-    Match.orElse(() => 'Start Lesson')
-  )
-
-  const errorMessage = Result.builder(connectionInfo)
-    .onError((error) => error.message)
-    .onDefect(() => 'Unexpected error occurred')
-    .orNull()
-
+function ErrorWithRetry({ message, onRetryAction }: { message: string; onRetryAction: () => void }) {
   return (
-    <div className="flex w-full max-w-lg flex-col items-center gap-4">
-      {errorMessage ? <p className="text-sm text-red-500">{errorMessage}</p> : null}
-      <button
-        type="button"
-        onClick={onStart}
-        disabled={Result.isWaiting(connectionInfo)}
-        className="cursor-pointer rounded-full bg-foreground px-8 py-4 text-background text-lg font-medium transition-all shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-70 dark:shadow-[0_4px_12px_rgba(255,255,255,0.1)] dark:hover:shadow-[0_8px_24px_rgba(255,255,255,0.15)] dark:hover:bg-[#ccc]"
-      >
-        {buttonLabel}
+    <div className="flex flex-col items-center gap-4">
+      <p className="text-sm text-red-500">{message}</p>
+      <button type="button" className={buttonClass} onClick={onRetryAction}>
+        Retry
       </button>
     </div>
   )
+}
+
+export function HomeLessonStartButton() {
+  const result = useAtomValue(startLessonAtom)
+  const set = useAtomSet(startLessonAtom)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (Result.isSuccess(result)) {
+      router.replace('/lesson')
+    }
+  }, [result, router])
+
+  const start = () => set({ payload: { lessonId: 'demo', userName: 'User' } })
+
+  return Result.builder(result)
+    .onInitial((initial) => (
+      <button type="button" className={buttonClass} disabled={initial.waiting} onClick={start}>
+        {initial.waiting ? 'Starting Lesson...' : 'Start Lesson'}
+      </button>
+    ))
+    .onSuccess(() => (
+      <button type="button" className={buttonClass} disabled>
+        Starting Lesson...
+      </button>
+    ))
+    .onErrorTag('RoomCreationError', () => (
+      <ErrorWithRetry message="Could not connect to the lesson server. Please try again." onRetryAction={start} />
+    ))
+    .onErrorTag('TokenGenerationError', () => (
+      <ErrorWithRetry message="Something went wrong on our end. Please try again later." onRetryAction={start} />
+    ))
+    .onDefect(() => <ErrorWithRetry message="An unexpected error occurred. Please try again." onRetryAction={start} />)
+    .render()
 }

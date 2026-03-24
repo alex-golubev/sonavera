@@ -1,39 +1,124 @@
-import { RoomAudioRenderer, SessionProvider, useSession } from '@livekit/components-react'
-import { Cause, Effect, Fiber } from 'effect'
-import { TokenSource } from 'livekit-client'
-import { useEffect, useMemo } from 'react'
-import { SessionStartError } from '~/features/lesson/errors'
-import { Transcript } from './Transcript'
+'use client'
 
-const AGENT_TIMEOUT_MS = 15_000
+import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { useCallback, useRef, useState } from 'react'
+import { ComponentBoundary } from '~/components/ComponentBoundary'
+import { AuraVisualizer } from '~/features/lesson/components/AuraVisualizer'
+import { LessonControls } from '~/features/lesson/components/LessonControls'
+import { LessonHeader } from '~/features/lesson/components/LessonHeader'
+import { TranscriptionPanel } from '~/features/lesson/components/TranscriptionPanel'
 
-export function LessonRoom({ url, token, onError }: { url: string; token: string; onError: () => void }) {
-  const tokenSource = useMemo(() => TokenSource.literal({ serverUrl: url, participantToken: token }), [url, token])
-  const session = useSession(tokenSource, { agentConnectTimeoutMilliseconds: AGENT_TIMEOUT_MS })
+export function LessonRoom({
+  token,
+  serverUrl,
+  onDisconnectedAction,
+  onErrorAction
+}: {
+  token: string
+  serverUrl: string
+  onDisconnectedAction: () => void
+  onErrorAction: (error: Error) => void
+}) {
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState(false)
+  const [isLeaving, setIsLeaving] = useState(false)
+  const isLeavingRef = useRef(false)
 
-  useEffect(() => {
-    const fiber = Effect.tryPromise({
-      try: () => session.start(),
-      catch: (cause) => new SessionStartError({ message: String(cause), cause })
-    }).pipe(
-      Effect.catchTag('SessionStartError', () => Effect.sync(() => onError())),
-      Effect.catchAllCause((cause) =>
-        Cause.isInterruptedOnly(cause)
-          ? Effect.succeed(void 0)
-          : Effect.logError(cause).pipe(Effect.andThen(Effect.sync(() => onError())))
-      ),
-      Effect.runFork
-    )
-    return () => {
-      Fiber.interrupt(fiber).pipe(Effect.runFork)
-      Effect.tryPromise(() => session.end()).pipe(Effect.ignoreLogged, Effect.runFork)
-    }
-  }, [session.start, session.end, onError])
+  const leave = useCallback((callback: () => void) => {
+    if (isLeavingRef.current) return
+    isLeavingRef.current = true
+    setIsLeaving(true)
+    setTimeout(callback, 250)
+  }, [])
+
+  const handleLeave = useCallback(() => leave(onDisconnectedAction), [leave, onDisconnectedAction])
+
+  const handleDisconnected = useCallback(() => {
+    if (isLeavingRef.current) return
+    leave(onDisconnectedAction)
+  }, [leave, onDisconnectedAction])
+
+  const handleError = useCallback(
+    (error: Error) => {
+      if (isLeavingRef.current) return
+      leave(() => onErrorAction(error))
+    },
+    [leave, onErrorAction]
+  )
 
   return (
-    <SessionProvider session={session}>
-      <RoomAudioRenderer />
-      <Transcript />
-    </SessionProvider>
+    <LiveKitRoom
+      serverUrl={serverUrl}
+      token={token}
+      audio={true}
+      video={false}
+      onDisconnected={handleDisconnected}
+      onError={handleError}
+    >
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isLeaving ? 0 : 1 }}
+        transition={{ duration: isLeaving ? 0.25 : 0.4, ease: 'easeOut' }}
+        className="relative flex h-screen w-full flex-col overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50"
+      >
+        <RoomAudioRenderer />
+
+        <div className="absolute top-0 right-0 left-0 z-20">
+          <LessonHeader />
+        </div>
+
+        <ComponentBoundary
+          name="visualization"
+          fallback={
+            <div className="relative flex h-full w-full flex-1 flex-col items-center justify-center">
+              <p className="text-sm text-zinc-400 dark:text-zinc-500">Visualization unavailable</p>
+            </div>
+          }
+        >
+          <div className="relative flex h-full w-full flex-1 flex-col">
+            <AuraVisualizer />
+
+            <div className="pointer-events-none absolute right-0 bottom-32 left-0 z-10">
+              <div className="pointer-events-auto">
+                <TranscriptionPanel visible={isTranscriptOpen} />
+              </div>
+            </div>
+          </div>
+        </ComponentBoundary>
+
+        <ComponentBoundary
+          name="controls"
+          fallback={
+            <div className="absolute right-0 bottom-6 left-0 z-20 flex justify-center pb-8">
+              <Link
+                href="/"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500 text-white transition-colors hover:bg-red-600"
+                aria-label="Leave lesson"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="h-6 w-6"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </Link>
+            </div>
+          }
+        >
+          <div className="absolute right-0 bottom-6 left-0 z-20 flex justify-center">
+            <LessonControls
+              isTranscriptOpen={isTranscriptOpen}
+              onToggleTranscriptAction={() => setIsTranscriptOpen((prev) => !prev)}
+              onLeaveAction={handleLeave}
+            />
+          </div>
+        </ComponentBoundary>
+      </motion.div>
+    </LiveKitRoom>
   )
 }

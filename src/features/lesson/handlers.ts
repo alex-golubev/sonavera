@@ -1,25 +1,15 @@
 import { Effect } from 'effect'
-import { LessonError } from './errors'
-import { LiveKitToken } from './ports'
-import { ConnectionInfo, LessonRpcGroup } from './rpc'
+import { LessonGroup } from '~/features/lesson/schema'
+import { LiveKitService } from '~/services/LiveKit'
 
-export const LessonHandlersLayer = LessonRpcGroup.toLayer(
-  Effect.gen(function* () {
-    const livekit = yield* LiveKitToken
-    return {
-      GetConnectionInfo: ({ language }) =>
-        Effect.gen(function* () {
-          const roomName = `lesson-${crypto.randomUUID()}`
-          const { url, token } = yield* livekit.generate({
-            roomName,
-            participantIdentity: `user-${crypto.randomUUID()}`,
-            attributes: { 'lesson.language': language }
-          })
-          return new ConnectionInfo({ url, token, roomName })
-        }).pipe(
-          Effect.tapError((error) => Effect.logError('GetConnectionInfo failed', error)),
-          Effect.mapError((error) => new LessonError({ message: error.message }))
-        )
-    }
-  })
-)
+export const LessonHandlersLive = LessonGroup.toLayer({
+  StartLesson: (payload) =>
+    Effect.gen(function* () {
+      const livekit = yield* LiveKitService
+      const { token } = yield* livekit.createLessonRoom(payload.lessonId, payload.userName, {
+        'lesson.language': 'English',
+        'lesson.nativeLanguage': 'Russian'
+      })
+      return { token, serverUrl: livekit.serverUrl }
+    })
+})

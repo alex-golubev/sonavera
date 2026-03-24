@@ -2,13 +2,14 @@ import { FetchHttpClient } from '@effect/platform'
 import { RpcClient, RpcSerialization } from '@effect/rpc'
 import { AtomRpc } from '@effect-atom/atom'
 import { Layer } from 'effect'
-import { AppRpcGroup } from './group'
+import { LessonGroup } from '~/features/lesson/schema'
 
-const ProtocolLive = RpcClient.layerProtocolHttp({ url: '/api/rpc' }).pipe(
-  Layer.provide([RpcSerialization.layerNdjson, FetchHttpClient.layer])
+export const protocol = RpcClient.layerProtocolHttp({ url: '/api/rpc' }).pipe(
+  Layer.provide(FetchHttpClient.layer),
+  Layer.provideMerge(RpcSerialization.layerNdjson)
 )
 
-export class AppRpc extends AtomRpc.Tag<AppRpc>()('AppRpc', {
-  group: AppRpcGroup,
-  protocol: ProtocolLive
+export class AppClient extends AtomRpc.Tag<AppClient>()('AppClient', {
+  group: LessonGroup,
+  protocol
 }) {}
