@@ -21,5 +21,13 @@ export function useLessonSession() {
     writeConnectionInfo(Atom.Reset)
   }, [writeConnectionInfo])
 
-  return { connectionInfo, start, reset }
+  const restart = useCallback(
+    (language: string = DEFAULT_LESSON_LANGUAGE) => {
+      writeConnectionInfo(Atom.Reset)
+      writeConnectionInfo({ payload: { language } })
+    },
+    [writeConnectionInfo]
+  )
+
+  return { connectionInfo, start, reset, restart }
 }

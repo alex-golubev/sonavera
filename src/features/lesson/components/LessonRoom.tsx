@@ -1,5 +1,5 @@
 import { RoomAudioRenderer, SessionProvider, useSession } from '@livekit/components-react'
-import { Cause, Effect, Exit, Scope } from 'effect'
+import { Cause, Effect, Fiber } from 'effect'
 import { TokenSource } from 'livekit-client'
 import { useEffect, useMemo } from 'react'
 import { SessionStartError } from '~/features/lesson/errors'
@@ -12,13 +12,9 @@ export function LessonRoom({ url, token, onError }: { url: string; token: string
   const session = useSession(tokenSource, { agentConnectTimeoutMilliseconds: AGENT_TIMEOUT_MS })
 
   useEffect(() => {
-    const scope = Effect.runSync(Scope.make())
-    Effect.gen(function* () {
-      yield* Effect.addFinalizer(() => Effect.tryPromise(() => session.end()).pipe(Effect.ignoreLogged))
-      yield* Effect.tryPromise({
-        try: () => session.start(),
-        catch: (cause) => new SessionStartError({ message: String(cause), cause })
-      })
+    const fiber = Effect.tryPromise({
+      try: () => session.start(),
+      catch: (cause) => new SessionStartError({ message: String(cause), cause })
     }).pipe(
       Effect.catchTag('SessionStartError', () => Effect.sync(() => onError())),
       Effect.catchAllCause((cause) =>
@@ -26,13 +22,14 @@ export function LessonRoom({ url, token, onError }: { url: string; token: string
           ? Effect.succeed(void 0)
           : Effect.logError(cause).pipe(Effect.andThen(Effect.sync(() => onError())))
       ),
-      Effect.provideService(Scope.Scope, scope),
       Effect.runFork
     )
     return () => {
-      Scope.close(scope, Exit.void).pipe(Effect.runFork)
+      Fiber.interrupt(fiber).pipe(Effect.runFork)
+      Effect.tryPromise(() => session.end()).pipe(Effect.ignoreLogged, Effect.runFork)
     }
   }, [session.start, session.end, onError])
+
   return (
     <SessionProvider session={session}>
       <RoomAudioRenderer />

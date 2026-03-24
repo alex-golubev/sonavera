@@ -68,13 +68,13 @@ function Active({
 }
 
 export function LessonView() {
-  const { connectionInfo, start, reset } = useLessonSession()
+  const { connectionInfo, start, reset, restart } = useLessonSession()
 
   return Result.builder(connectionInfo)
     .onWaiting(() => <Connecting />)
     .onInitial(() => <NotStarted />)
     .onError((error) => <Failed message={error.message} onRetry={start} />)
     .onDefect(() => <Failed message="Unexpected error occurred" onRetry={start} />)
-    .onSuccess((value) => <Active url={value.url} token={value.token} onEnd={reset} onError={reset} />)
+    .onSuccess((value) => <Active url={value.url} token={value.token} onEnd={reset} onError={restart} />)
     .render()
 }
