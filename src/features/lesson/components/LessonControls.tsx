@@ -18,12 +18,12 @@ export function LessonControls({ isTranscriptOpen, onToggleTranscriptAction, onL
   const btnBase = 'flex h-12 w-12 items-center justify-center rounded-full transition-colors'
 
   return (
-    <div className="flex items-center gap-4 pb-8">
+    <div className="flex items-center gap-4">
       <button
         type="button"
-        className={`${btnBase} ${
+        className={`${btnBase} shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
           isMicrophoneEnabled
-            ? 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
+            ? 'bg-white text-neutral-700 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700'
             : 'bg-red-500/15 text-red-500 hover:bg-red-500/25'
         }`}
         onClick={toggleMic}
@@ -34,10 +34,10 @@ export function LessonControls({ isTranscriptOpen, onToggleTranscriptAction, onL
 
       <button
         type="button"
-        className={`${btnBase} ${
+        className={`${btnBase} shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
           isTranscriptOpen
             ? 'bg-accent/15 text-accent'
-            : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
+            : 'bg-white text-neutral-700 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700'
         }`}
         onClick={onToggleTranscriptAction}
         aria-label={isTranscriptOpen ? 'Hide transcript' : 'Show transcript'}
@@ -48,7 +48,7 @@ export function LessonControls({ isTranscriptOpen, onToggleTranscriptAction, onL
       <button
         type="button"
         onClick={onLeaveAction}
-        className={`${btnBase} bg-red-500 text-white hover:bg-red-600`}
+        className={`${btnBase} bg-red-500 text-white shadow-[0_4px_12px_rgba(239,68,68,0.3)] hover:bg-red-600`}
         aria-label="Leave lesson"
       >
         <LeaveIcon />

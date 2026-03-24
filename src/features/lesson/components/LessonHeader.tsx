@@ -20,7 +20,9 @@ export function LessonHeader() {
   return (
     <header className="flex w-full items-center justify-between px-6 py-4">
       <Wordmark />
-      <span className="font-mono text-sm text-zinc-500 tabular-nums dark:text-zinc-400">{formatTime(elapsed)}</span>
+      <span className="font-mono text-sm text-neutral-500 tabular-nums [text-shadow:0_1px_2px_rgba(0,0,0,0.05)] dark:text-neutral-400">
+        {formatTime(elapsed)}
+      </span>
     </header>
   )
 }

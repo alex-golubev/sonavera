@@ -71,7 +71,7 @@ export function TranscriptionPanel({ visible }: { visible: boolean }) {
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mt-auto text-center text-sm tracking-wide text-zinc-400 dark:text-zinc-500"
+              className="mt-auto text-center text-sm tracking-wide text-neutral-400 dark:text-neutral-500"
             >
               Transcript will appear here...
             </motion.p>
@@ -114,7 +114,9 @@ export function TranscriptionPanel({ visible }: { visible: boolean }) {
                     <p
                       className={cn(
                         'text-[17px] leading-relaxed font-normal tracking-wide drop-shadow-md sm:text-lg',
-                        entry.isUser ? 'text-zinc-700 dark:text-zinc-300' : 'text-zinc-900 dark:text-zinc-100'
+                        entry.isUser
+                          ? 'text-neutral-700 dark:text-neutral-300'
+                          : 'text-neutral-900 dark:text-neutral-100'
                       )}
                     >
                       {entry.text}

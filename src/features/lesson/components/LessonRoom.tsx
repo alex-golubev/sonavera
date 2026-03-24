@@ -60,7 +60,7 @@ export function LessonRoom({
         initial={{ opacity: 0 }}
         animate={{ opacity: isLeaving ? 0 : 1 }}
         transition={{ duration: isLeaving ? 0.25 : 0.4, ease: 'easeOut' }}
-        className="relative flex h-screen w-full flex-col overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50"
+        className="relative flex h-screen w-full flex-col overflow-hidden bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50"
       >
         <RoomAudioRenderer />
 
@@ -72,7 +72,7 @@ export function LessonRoom({
           name="visualization"
           fallback={
             <div className="relative flex h-full w-full flex-1 flex-col items-center justify-center">
-              <p className="text-sm text-zinc-400 dark:text-zinc-500">Visualization unavailable</p>
+              <p className="text-sm text-neutral-400 dark:text-neutral-500">Visualization unavailable</p>
             </div>
           }
         >
@@ -110,7 +110,7 @@ export function LessonRoom({
             </div>
           }
         >
-          <div className="absolute right-0 bottom-6 left-0 z-20 flex justify-center">
+          <div className="absolute right-0 bottom-8 left-0 z-20 flex justify-center">
             <LessonControls
               isTranscriptOpen={isTranscriptOpen}
               onToggleTranscriptAction={() => setIsTranscriptOpen((prev) => !prev)}

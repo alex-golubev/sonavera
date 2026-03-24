@@ -34,7 +34,7 @@ export function AuraVisualizer() {
 
   return (
     <div className="relative flex w-full flex-1 flex-col items-center justify-center overflow-hidden">
-      <p className="mb-8 text-sm font-medium tracking-wide text-zinc-500 dark:text-zinc-400">
+      <p className="mb-8 text-sm font-medium tracking-wide text-neutral-500 dark:text-neutral-400">
         {stateLabels[state] ?? state}
       </p>
 
@@ -51,7 +51,7 @@ export function AuraVisualizer() {
               ? 'bg-teal-500/40'
               : isUserActive
                 ? 'bg-indigo-500/40'
-                : 'bg-zinc-500/20'
+                : 'bg-neutral-500/20'
           )}
           style={safariBlurFix}
         />
@@ -68,7 +68,7 @@ export function AuraVisualizer() {
               ? 'bg-teal-400/30'
               : isUserActive
                 ? 'bg-indigo-400/30'
-                : 'bg-zinc-400/10'
+                : 'bg-neutral-400/10'
           )}
           style={safariBlurFix}
         />
@@ -85,7 +85,7 @@ export function AuraVisualizer() {
               ? 'bg-teal-300/60'
               : isUserActive
                 ? 'bg-indigo-300/60'
-                : 'bg-zinc-300/30'
+                : 'bg-neutral-300/30'
           )}
           style={safariBlurFix}
         />

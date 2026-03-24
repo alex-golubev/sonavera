@@ -1,6 +1,6 @@
 export function Wordmark() {
   return (
-    <span className="text-lg font-medium tracking-tight text-zinc-900 dark:text-zinc-100">
+    <span className="text-lg font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
       <svg
         aria-hidden="true"
         viewBox="0 0 24 28"
