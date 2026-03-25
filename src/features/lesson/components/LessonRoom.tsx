@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useCallback, useRef, useState } from 'react'
 import { ComponentBoundary } from '~/components/ComponentBoundary'
 import { AuraVisualizer } from '~/features/lesson/components/AuraVisualizer'
+import { FeedbackToast } from '~/features/lesson/components/FeedbackToast'
 import { LessonControls } from '~/features/lesson/components/LessonControls'
 import { LessonHeader } from '~/features/lesson/components/LessonHeader'
 import { TranscriptionPanel } from '~/features/lesson/components/TranscriptionPanel'
@@ -82,6 +83,12 @@ export function LessonRoom({
             <div className="pointer-events-none absolute right-0 bottom-32 left-0 z-10">
               <div className="pointer-events-auto">
                 <TranscriptionPanel visible={isTranscriptOpen} />
+              </div>
+            </div>
+
+            <div className="pointer-events-none absolute inset-0 z-20">
+              <div className="relative mx-auto h-full w-full max-w-2xl px-6">
+                <FeedbackToast visible={isTranscriptOpen} />
               </div>
             </div>
           </div>
