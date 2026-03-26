@@ -1,8 +1,7 @@
 'use client'
 
-import { Result, useAtomSet, useAtomValue } from '@effect-atom/atom-react'
+import { Result, useAtomSet, useAtomSubscribe, useAtomValue } from '@effect-atom/atom-react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import { startLessonAtom } from '~/features/lesson/store'
 
 const buttonClass =
@@ -24,11 +23,9 @@ export function HomeLessonStartButton() {
   const set = useAtomSet(startLessonAtom)
   const router = useRouter()
 
-  useEffect(() => {
-    if (Result.isSuccess(result)) {
-      router.replace('/lesson')
-    }
-  }, [result, router])
+  useAtomSubscribe(startLessonAtom, (r) =>
+    Result.builder(r).onSuccess(() => router.replace('/lesson')).render()
+  )
 
   const start = () => set({ payload: { lessonId: 'demo', userName: 'User' } })
 

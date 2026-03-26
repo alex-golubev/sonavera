@@ -13,7 +13,7 @@ interface TranscriptEntry {
   readonly timestamp: number
 }
 
-export function TranscriptionPanel({ visible }: { visible: boolean }) {
+export function TranscriptionPanel() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const { agent } = useVoiceAssistant()
   const transcriptions = useTranscriptions()
@@ -40,18 +40,11 @@ export function TranscriptionPanel({ visible }: { visible: boolean }) {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll on new entries
   useEffect(() => {
-    if (visible) {
-      const el = scrollRef.current
-      if (el) {
-        el.scrollTo({
-          top: el.scrollHeight,
-          behavior: 'smooth'
-        })
-      }
-    }
-  }, [entries.length, visible])
-
-  if (!visible) return null
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: 'smooth'
+    })
+  }, [entries.length])
 
   return (
     <div

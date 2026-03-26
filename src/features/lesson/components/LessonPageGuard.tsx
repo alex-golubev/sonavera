@@ -1,8 +1,7 @@
 'use client'
 
-import { Atom, Result, useAtomSet, useAtomValue } from '@effect-atom/atom-react'
+import { Atom, Result, useAtomSet, useAtomSubscribe, useAtomValue } from '@effect-atom/atom-react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import { LessonRoom } from '~/features/lesson/components/LessonRoom'
 import { startLessonAtom } from '~/features/lesson/store'
 
@@ -11,30 +10,23 @@ export function LessonPageGuard() {
   const set = useAtomSet(startLessonAtom)
   const router = useRouter()
 
-  const hasToken = Result.isSuccess(result)
+  useAtomSubscribe(startLessonAtom, (r) =>
+    Result.builder(r).onInitial(() => router.replace('/')).render()
+  )
 
-  useEffect(() => {
-    if (!hasToken) {
-      router.replace('/')
-    }
-  }, [hasToken, router])
-
-  if (!hasToken) {
-    return null
+  const goHome = () => {
+    set(Atom.Reset)
+    router.replace('/')
   }
 
-  return (
-    <LessonRoom
-      token={result.value.token}
-      serverUrl={result.value.serverUrl}
-      onDisconnectedAction={() => {
-        set(Atom.Reset)
-        router.replace('/')
-      }}
-      onErrorAction={() => {
-        set(Atom.Reset)
-        router.replace('/')
-      }}
-    />
-  )
+  return Result.builder(result)
+    .onSuccess((value) => (
+      <LessonRoom
+        token={value.token}
+        serverUrl={value.serverUrl}
+        onDisconnectedAction={goHome}
+        onErrorAction={goHome}
+      />
+    ))
+    .render()
 }

@@ -24,29 +24,20 @@ export function LessonRoom({
 }) {
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
-  const isLeavingRef = useRef(false)
 
-  const leave = useCallback((callback: () => void) => {
-    if (isLeavingRef.current) return
-    isLeavingRef.current = true
+  const leaveRef = useRef<((cb: () => void) => void) | null>((cb) => {
+    leaveRef.current = null
     setIsLeaving(true)
-    setTimeout(callback, 250)
-  }, [])
+    setTimeout(cb, 250)
+  })
+
+  const leave = useCallback((cb: () => void) => leaveRef.current?.(cb), [])
 
   const handleLeave = useCallback(() => leave(onDisconnectedAction), [leave, onDisconnectedAction])
 
-  const handleDisconnected = useCallback(() => {
-    if (isLeavingRef.current) return
-    leave(onDisconnectedAction)
-  }, [leave, onDisconnectedAction])
+  const handleDisconnected = useCallback(() => leave(onDisconnectedAction), [leave, onDisconnectedAction])
 
-  const handleError = useCallback(
-    (error: Error) => {
-      if (isLeavingRef.current) return
-      leave(() => onErrorAction(error))
-    },
-    [leave, onErrorAction]
-  )
+  const handleError = useCallback((error: Error) => leave(() => onErrorAction(error)), [leave, onErrorAction])
 
   return (
     <LiveKitRoom
@@ -80,11 +71,13 @@ export function LessonRoom({
           <div className="relative flex h-full w-full flex-1 flex-col">
             <AuraVisualizer />
 
-            <div className="pointer-events-none absolute right-0 bottom-32 left-0 z-10">
-              <div className="pointer-events-auto">
-                <TranscriptionPanel visible={isTranscriptOpen} />
+            {isTranscriptOpen && (
+              <div className="pointer-events-none absolute right-0 bottom-32 left-0 z-10">
+                <div className="pointer-events-auto">
+                  <TranscriptionPanel />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="pointer-events-none absolute inset-0 z-20">
               <div className="relative mx-auto h-full w-full max-w-2xl px-6">
