@@ -38,13 +38,15 @@ export function TranscriptionPanel() {
     [transcriptions, agentIdentity]
   )
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll on new entries
+  // `entries` is used as a trigger dependency — not read in the effect body,
+  // but we need the effect to re-run when new transcription entries arrive.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: trigger dependency
   useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
       behavior: 'smooth'
     })
-  }, [entries.length])
+  }, [entries])
 
   return (
     <div

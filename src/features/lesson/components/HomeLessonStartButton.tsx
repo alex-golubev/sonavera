@@ -24,7 +24,9 @@ export function HomeLessonStartButton() {
   const router = useRouter()
 
   useAtomSubscribe(startLessonAtom, (r) =>
-    Result.builder(r).onSuccess(() => router.replace('/lesson')).render()
+    Result.builder(r)
+      .onSuccess(() => router.replace('/lesson'))
+      .render()
   )
 
   const start = () => set({ payload: { lessonId: 'demo', userName: 'User' } })

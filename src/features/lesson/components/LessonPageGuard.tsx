@@ -11,7 +11,9 @@ export function LessonPageGuard() {
   const router = useRouter()
 
   useAtomSubscribe(startLessonAtom, (r) =>
-    Result.builder(r).onInitial(() => router.replace('/')).render()
+    Result.builder(r)
+      .onInitial(() => router.replace('/'))
+      .render()
   )
 
   const goHome = () => {
