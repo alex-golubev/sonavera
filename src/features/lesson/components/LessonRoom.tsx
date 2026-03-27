@@ -10,6 +10,7 @@ import { FeedbackToast } from '~/features/lesson/components/FeedbackToast'
 import { LessonControls } from '~/features/lesson/components/LessonControls'
 import { LessonHeader } from '~/features/lesson/components/LessonHeader'
 import { TranscriptionPanel } from '~/features/lesson/components/TranscriptionPanel'
+import { cn } from '~/lib/utils'
 
 export function LessonRoom({
   token,
@@ -71,13 +72,16 @@ export function LessonRoom({
           <div className="relative flex h-full w-full flex-1 flex-col">
             <AuraVisualizer />
 
-            {isTranscriptOpen && (
-              <div className="pointer-events-none absolute right-0 bottom-32 left-0 z-10">
-                <div className="pointer-events-auto">
-                  <TranscriptionPanel />
-                </div>
+            <div
+              className={cn(
+                'pointer-events-none absolute right-0 bottom-32 left-0 z-10',
+                !isTranscriptOpen && 'invisible'
+              )}
+            >
+              <div className="pointer-events-auto">
+                <TranscriptionPanel />
               </div>
-            )}
+            </div>
 
             <div className="pointer-events-none absolute inset-0 z-20">
               <div className="relative mx-auto h-full w-full max-w-2xl px-6">
