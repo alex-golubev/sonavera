@@ -107,6 +107,8 @@ export function TranscriptionPanel() {
                       {entry.speaker}
                     </span>
                     <p
+                      dir="auto"
+                      style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                       className={cn(
                         'text-[17px] leading-relaxed font-normal tracking-wide drop-shadow-md sm:text-lg',
                         entry.isUser
