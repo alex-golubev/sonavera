@@ -7,7 +7,7 @@ export const LessonHandlersLive = LessonGroup.toLayer({
     Effect.gen(function* () {
       const livekit = yield* LiveKitService
       const { token } = yield* livekit.createLessonRoom(payload.lessonId, payload.userName, {
-        'lesson.language': 'English',
+        'lesson.language': 'Hebrew',
         'lesson.nativeLanguage': 'Russian'
       })
       return { token, serverUrl: livekit.serverUrl }
